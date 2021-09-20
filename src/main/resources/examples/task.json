@@ -1,0 +1,18 @@
+{
+        "TaskOwner": 250,
+        "OwnerName": "Mandar Parab",
+        "Module": "ACMK",
+        "Description": "Temp",
+        "Project": "Laniak Blog",
+        "DateCreated": "2021-09-09T00:00:00",
+        "Priority": "HardBlock",
+        "Title": "Temp",
+        "Type": "Bug",
+        "DateTerminated": "2021-09-09T00:00:00",
+        "TaskStatus": "In_Progress",
+        "AssignerName": "Shashank",
+        "TaskAssigner": 240,
+        "ProjectId": 249,
+        "TaskId": 347,
+        "Order": null
+}

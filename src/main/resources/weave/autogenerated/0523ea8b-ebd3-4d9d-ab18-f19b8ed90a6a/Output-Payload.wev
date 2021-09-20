@@ -1,0 +1,4 @@
+%dw 2.0
+
+type auto_0523ea8b_ebd3_4d9d_ab18_f19b8ed90a6a_Output_Payload = Array<{|  projectid?: String,   projectname?: String|}>
+

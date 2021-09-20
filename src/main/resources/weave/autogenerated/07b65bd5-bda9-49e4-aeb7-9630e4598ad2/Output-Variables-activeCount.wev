@@ -1,0 +1,4 @@
+%dw 2.0
+
+type auto_07b65bd5_bda9_49e4_aeb7_9630e4598ad2_Output_Variables_activeCount = Number | Null
+

@@ -1,0 +1,9 @@
+%dw 2.0
+
+type auto_914474bc_c36c_44b0_9ddc_2d80f9797612_Output_Payload = {|
+  completedCount: String, 
+  moduleData: Array<{|    moduleName: String,     count: String  |}> | Array<{|    Module?: String,     count?: Number  |}> | Null, 
+  totalCount: String, 
+  activeCount: String
+|}
+

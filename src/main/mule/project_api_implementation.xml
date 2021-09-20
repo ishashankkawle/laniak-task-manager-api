@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:mongo="http://www.mulesoft.org/schema/mule/mongo" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/mongo http://www.mulesoft.org/schema/mule/mongo/current/mule-mongo.xsd">
+	
+	<flow name="getProjectIdFromName" doc:id="747c8a09-fe10-46e6-a06c-547d6344f021" >
+		<set-variable value="#[attributes.queryParams.name]" doc:name="Set Variable" doc:id="8348895b-f273-48e0-87cf-420108f2eb3f" variableName="projectName"/>
+		<db:select doc:name="Select" doc:id="31e020ae-6cb9-4c5d-843d-9e97f49397e2" config-ref="rdbms_master_db_config">
+			<reconnect />
+			<db:sql><![CDATA[SELECT "ProjectId" FROM project_master WHERE "ProjectName" = :name]]></db:sql>
+			<db:input-parameters><![CDATA[#[{'name' : vars.projectName}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="1ad4c999-2143-4388-8d4f-0ee9656a923b">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="getProjectListForUser" doc:id="4299777e-4d69-429c-bfac-a8ea206c655b" >
+		<db:select doc:name="Select" doc:id="2a38700c-a197-4ac5-a317-7c02faf61a4f" config-ref="rdbms_master_db_config">
+			<reconnect />
+			<db:sql ><![CDATA[SELECT DISTINCT "ProjectId" , "ProjectName" FROM VIEW_USERPROJECTMAP WHERE "UserId" = :userId ]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{'userId' : attributes.queryParams.userId}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="281bb683-803e-4f83-873e-66131119cf73" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="getCommonProjectsListForUsers" doc:id="0523ea8b-ebd3-4d9d-ab18-f19b8ed90a6a" >
+		<set-variable value="#[attributes.queryParams.userId]" doc:name="Set userId" doc:id="24d09053-c213-4581-88ea-69f395f3bda1" variableName="userId"/>
+		<set-variable value="#[attributes.queryParams.otherUserId]" doc:name="Set otherUserId" doc:id="7decf639-b1c9-4692-b413-46de204cd543" variableName="otherUserId"/>
+		<db:select doc:name="Select" doc:id="312a7567-12ad-4b6c-9228-3dbfd4263c63" config-ref="rdbms_master_db_config">
+			<reconnect />
+			<db:sql><![CDATA[SELECT DISTINCT vupm.pjid1 as projectId ,  vupm.pjnm1 as projectName FROM (SELECT vu1."ProjectId" pjid1, vu1."ProjectName" pjnm1 FROM VIEW_USERPROJECTMAP AS vu1 WHERE "UserId" = :userId )vupm JOIN (SELECT vu2."ProjectId" pjid2 , vu2."ProjectName" pjnm2 FROM VIEW_USERPROJECTMAP vu2 WHERE "UserId" = :otherUserId )vupm1 ON (vupm.pjid1::TEXT = vupm1.pjid2)]]></db:sql>
+			<db:input-parameters><![CDATA[#[{'userId' : vars.userId , 'otherUserId' : vars.otherUserId}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="316958b5-aa0e-44cd-8637-6194f4f8b726">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="getAllProjects" doc:id="55ff61cf-7db4-478c-a362-4709c932b0ad" >
+		<db:select doc:name="Select" doc:id="0212ee7b-2503-4465-b137-75c287908dd7" config-ref="rdbms_master_db_config">
+			<reconnect />
+			<db:sql ><![CDATA[SELECT * FROM project_master]]></db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="61c52645-6480-4d90-83fb-3de6e28424e8" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload map ( payload01 , indexOfPayload01 ) -> {
+	projectId: payload01.ProjectId as String default "",
+	projectName: payload01.ProjectName default ""
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="mainProjectFlow" doc:id="ec714729-4603-40a3-9725-f50315017cd9" >
+		<logger level="INFO" doc:name="Logger" doc:id="95f920f8-0965-4428-a23e-1f9cdf0da70e" />
+		<choice doc:name="Choice" doc:id="d8c2f880-8f22-4627-b4be-7f11eba872cc" >
+			<when expression="#[sizeOf(attributes.queryParams) == 2]">
+				<flow-ref doc:name="Get common project list for users" doc:id="f5f2e5a6-7daf-4cc8-845c-410d1a687cf1" name="getCommonProjectsListForUsers"/>
+			</when>
+			<when expression="#[sizeOf(attributes.queryParams) == 1]" >
+				<choice doc:name="Choice" doc:id="87647dca-25bd-4158-a56f-39588ed3b6c9" >
+					<when expression="#[attributes.queryParams.name != null]">
+						<flow-ref doc:name="Get Project ID from Project Name" doc:id="856a09f3-1eb5-4dc8-b82c-91d125d7e1cd" name="getProjectIdFromName"/>
+					</when>
+					<otherwise >
+						<flow-ref doc:name="Get Project List for User Id" doc:id="428973e8-2858-499b-8cf3-9fd6cbb7d4be" name="getProjectListForUser"/>
+					</otherwise>
+				</choice>
+			</when>
+			<otherwise >
+				<flow-ref doc:name="Get all projects" doc:id="bcec5cae-f54b-42c9-9616-bcf186af4d27" name="getAllProjects"/>
+			</otherwise>
+		</choice>
+		<ee:transform doc:name="Transform Message" doc:id="94971a04-cf42-47d5-90e0-0f94d2e08cbd" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="laniak-core-apiFlow" doc:id="414710c9-8d65-495d-ac6f-5a36afcf4e22" >
+		<http:listener doc:name="GET /nosql" doc:id="0e9f8a55-1083-4a05-8cef-56c11e759829" config-ref="HTTP_Listener_config" path="/nosql"/>
+		<mongo:collection-exists doc:name="Collection exists" doc:id="8324c256-ae27-4315-9d67-b882ab007627" config-ref="mongo_db_config" collectionName="TSSTaskHistory.TSSTaskHistoryCollection"/>
+		<ee:transform doc:name="Transform Message" doc:id="dc2653f2-32ac-4882-b15b-b14698e1750d" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>

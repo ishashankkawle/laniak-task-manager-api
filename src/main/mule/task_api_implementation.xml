@@ -1,0 +1,266 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd 
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd 
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+<flow name="getAllTasks" doc:id="cb257215-e5ac-4ce8-85c1-97347cd46761">
+		<db:select doc:name="Select" doc:id="0d295f7d-8309-4546-b8c6-d764b7e71a8e" config-ref="rdbms_master_db_config">
+			<reconnect />
+			<db:sql ><![CDATA[SELECT * FROM view_taskmaster]]></db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="25653c8b-fc38-4cc6-89ef-fd57db2562f3" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="getTaskOnFilterCondition" doc:id="c5e1bed9-deac-4ba9-ba1d-c02ba53604dd">
+		<set-variable value="#[attributes.queryParams.taskFilter]" doc:name="Set Filter" doc:id="2c96eeb9-5966-46b9-b201-08a4b0b1085c" variableName="filter" />
+		<set-variable value="#[attributes.queryParams.filterParam]" doc:name="Set Value" doc:id="a0983957-af3d-425a-b53c-f9e78f889307" variableName="value" />
+		<set-variable value="#[&quot;SELECT * FROM view_taskmaster WHERE \&quot;&quot; ++ vars.filter as String default &quot;dummy&quot; ++ &quot;\&quot; = '&quot; ++ vars.value as String default &quot;dummy&quot; ++ &quot;'&quot;]" doc:name="Generate Dynamic Query" doc:id="0e249a40-551d-4542-b139-6b63c47fb866" variableName="query" />
+		<db:select doc:name="Select" doc:id="3dd31a23-3b50-4804-8569-a550eeddfc33" config-ref="rdbms_master_db_config">
+			<db:sql><![CDATA[#[vars.query]]]></db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="14783d0f-58e4-44c2-a5ed-1c44d4776d2a">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="mainTaskFlow" doc:id="ab140abe-e530-4351-ae48-a17943db4c6b" >
+		<http:listener doc:name="Listener" doc:id="25e9b40c-6611-4a5d-a4a8-b2746e887c48" config-ref="HTTP_Listener_config" path="/tsk"/>
+		<choice doc:name="Choice" doc:id="1432e2df-ece6-48bd-8e51-18b266e94208" >
+			<when expression="#[sizeOf(attributes.queryParams) != 0]">
+				<flow-ref doc:name="get Tasks Using Filter" doc:id="0d4b7e39-8363-42f0-805c-f2c16394aa15" name="getTaskOnFilterCondition"/>
+			</when>
+			<otherwise >
+				<flow-ref doc:name="get All Tasks" doc:id="6686faf5-4387-455a-992f-c5a06cf3d4a3" name="getAllTasks"/>
+			</otherwise>
+		</choice>
+		<ee:transform doc:name="Transform Message" doc:id="b4fc908d-c928-4e9b-aef8-0ed7037cc0eb" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="getTasksById" doc:id="815a9fb6-0ea8-41c1-8161-2a21d6eec916" >
+		<http:listener doc:name="GET /task/{ID}" doc:id="d361d753-ef10-4bcd-ab90-b4a09cca9d5e" config-ref="HTTP_Listener_config" path="/task/{ID}" allowedMethods="GET"/>
+		<db:select doc:name="Select" doc:id="c37117f2-d757-4d68-988f-d7431125a5b3" config-ref="rdbms_master_db_config">
+			<reconnect />
+			<db:sql ><![CDATA[SELECT * FROM view_taskmaster AS ms WHERE ms."TaskId" = :taskId]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{'taskId' : attributes.uriParams.ID}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="d459ae3a-bf80-4e2e-895f-171b83cf8243" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="abc" ><![CDATA[%dw 2.0
+output application/java
+---
+payload.abc]]></ee:set-variable>
+				<ee:set-variable variableName="task" ><![CDATA[%dw 2.0
+output application/java
+---
+payload.id]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+	</flow>
+	<flow name="getUserBasedTaskSummary" doc:id="07b65bd5-bda9-49e4-aeb7-9630e4598ad2" >
+		<scatter-gather doc:name="Scatter-Gather" doc:id="7a731926-11e0-4a47-9a82-9678bb4ff802" >
+			<route >
+				<db:select doc:name="Select" doc:id="1f3449ae-eaf7-4b16-bf19-174f0640820a" config-ref="rdbms_master_db_config">
+					<reconnect />
+					<db:sql ><![CDATA[SELECT COUNT(*) FROM View_TaskMaster WHERE "TaskOwner" = :userId ]]></db:sql>
+					<db:input-parameters ><![CDATA[#[{'userId' : attributes.queryParams.userId}]]]></db:input-parameters>
+				</db:select>
+				<set-variable value="#[payload[0].count]" doc:name="Set Total Count" doc:id="118ee4db-c522-402b-90c4-4171de6293c7" variableName="totalCount"/>
+			</route>
+			<route >
+				<db:select doc:name="Select" doc:id="e2c23618-d63d-40f0-bda5-727c26383075" config-ref="rdbms_master_db_config">
+					<reconnect />
+					<db:sql ><![CDATA[SELECT COUNT(*) FROM View_TaskMaster WHERE "TaskStatus" IN ('New' , 'In_Progress') AND "TaskOwner" = :userId ]]></db:sql>
+					<db:input-parameters ><![CDATA[#[{'userId' : attributes.queryParams.userId}]]]></db:input-parameters>
+				</db:select>
+				<set-variable value="#[payload[0].count]" doc:name="Set Active Count" doc:id="771dfeb3-1079-4724-8d63-70afad2709f0" variableName="activeCount"/>
+			</route>
+			<route >
+				<db:select doc:name="Select" doc:id="5047e21e-c757-4889-8280-01d89c9fdfb5" config-ref="rdbms_master_db_config">
+					<reconnect />
+					<db:sql ><![CDATA[SELECT COUNT(*) FROM View_TaskMaster WHERE "TaskStatus" IN ('Complete') AND "TaskOwner" = :userId ]]></db:sql>
+					<db:input-parameters ><![CDATA[#[{'userId' : attributes.queryParams.userId}]]]></db:input-parameters>
+				</db:select>
+				<set-variable value="#[payload[0].count]" doc:name="Set Completed Count" doc:id="191e5da0-36ce-4458-b4cd-d90605b56e55" variableName="completedCount"/>
+			</route>
+			<route >
+				<db:select doc:name="Select" doc:id="61dcf0d8-c3e4-4c2a-a299-a30268e47e4e" config-ref="rdbms_master_db_config">
+					<reconnect />
+					<db:sql ><![CDATA[SELECT "Module" , COUNT(0) FROM View_TaskMaster WHERE "TaskOwner" = :userId GROUP BY "Module"]]></db:sql>
+					<db:input-parameters ><![CDATA[#[{'userId' : attributes.queryParams.userId}]]]></db:input-parameters>
+				</db:select>
+				<set-variable value="#[payload]" doc:name="Set Module Array" doc:id="4ca7dce6-7595-4c5a-a1a2-3630a0f7b97c" variableName="module"/>
+			</route>
+		</scatter-gather>
+		<ee:transform doc:name="Extract payload from all outputs" doc:id="04c5d3df-3dd3-4880-8a0d-6fae216a1954" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	totalCount: vars.totalCount as String,
+	activeCount: vars.activeCount as String,
+	completedCount: vars.completedCount as String,
+	moduleData: vars.module
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="getTaskSummary" doc:id="57f5b681-ed08-4f97-aa56-750f51d60a11" >
+		<scatter-gather doc:name="Scatter-Gather" doc:id="c7c893d1-afeb-4b49-a9ef-26076f37783a" >
+			<route >
+				<db:select doc:name="Select" doc:id="e7892d2b-efb6-4ba1-8b9d-1b9d7ff79b63" config-ref="rdbms_master_db_config" >
+					<reconnect />
+					<db:sql ><![CDATA[SELECT COUNT(*) FROM View_TaskMaster]]></db:sql>
+					<db:input-parameters ><![CDATA[#[{'userId' : attributes.queryParams.userId}]]]></db:input-parameters>
+				</db:select>
+				<set-variable value="#[payload[0].count]" doc:name="Set Total Count" doc:id="78bd55a4-cc80-4c54-9bca-f062b9814b7b" variableName="totalCount" />
+			</route>
+			<route >
+				<db:select doc:name="Select" doc:id="89bdab24-5db8-45a5-a009-c9181f022ff4" config-ref="rdbms_master_db_config" >
+					<reconnect />
+					<db:sql ><![CDATA[SELECT COUNT(*) FROM View_TaskMaster WHERE "TaskStatus" IN ('New' , 'In_Progress')]]></db:sql>
+					<db:input-parameters ><![CDATA[#[{'userId' : attributes.queryParams.userId}]]]></db:input-parameters>
+				</db:select>
+				<set-variable value="#[payload[0].count]" doc:name="Set Active Count" doc:id="1b37ce21-2392-40e4-b10e-55e640ecc098" variableName="activeCount" />
+			</route>
+			<route >
+				<db:select doc:name="Select" doc:id="56d9277d-98e8-4a4b-93fd-254ab9267a19" config-ref="rdbms_master_db_config" >
+					<reconnect />
+					<db:sql ><![CDATA[SELECT COUNT(*) FROM View_TaskMaster WHERE "TaskStatus" IN ('Complete')]]></db:sql>
+					<db:input-parameters ><![CDATA[#[{'userId' : attributes.queryParams.userId}]]]></db:input-parameters>
+				</db:select>
+				<set-variable value="#[payload[0].count]" doc:name="Set Completed Count" doc:id="ab636d0b-3249-4e71-9718-25309c72bc33" variableName="completedCount" />
+			</route>
+			<route >
+				<db:select doc:name="Select" doc:id="26a87efb-a512-4aa4-9d53-0f806ab450e8" config-ref="rdbms_master_db_config" >
+					<reconnect />
+					<db:sql ><![CDATA[SELECT "Module" , COUNT(0) FROM View_TaskMaster GROUP BY "Module"]]></db:sql>
+					<db:input-parameters ><![CDATA[#[{'userId' : attributes.queryParams.userId}]]]></db:input-parameters>
+				</db:select>
+				<set-variable value="#[payload]" doc:name="Set Module Array" doc:id="cddb44d9-ae27-480a-9705-18803670e811" variableName="module" />
+			</route>
+		</scatter-gather>
+		<ee:transform doc:name="Extract payload from all outputs" doc:id="019aca7e-e95b-4efd-b11f-9a936c802b76" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	totalCount: vars.totalCount as String,
+	activeCount: vars.activeCount as String,
+	completedCount: vars.completedCount as String,
+	moduleData: vars.module
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="mainTaskSummaryFlow" doc:id="914474bc-c36c-44b0-9ddc-2d80f9797612" >
+		<choice doc:name="Choice" doc:id="02ec15de-dd6d-41db-9458-d55dc56d067f" >
+			<when expression="#[attributes.queryParams.userId != null]">
+				<flow-ref doc:name="Call getUserBasedTaskSummary" doc:id="124872e5-3793-4265-9ac8-1d2d677cc4d2" name="getUserBasedTaskSummary"/>
+			</when>
+			<otherwise >
+				<flow-ref doc:name="Call getTaskSummary" doc:id="17673152-7587-41ad-b639-6d36a4f530e2" name="getTaskSummary"/>
+			</otherwise>
+		</choice>
+		<logger level="INFO" doc:name="Logger" doc:id="a5d76f03-abc1-41cf-90bf-0c73e567a6e4" />
+	</flow>
+	<flow name="getVerificationCommits" doc:id="2f5ac52b-70e1-454e-b22f-71672afadd7c" >
+		<choice doc:name="Choice" doc:id="84ab8c1b-cf89-4302-b409-eb05307adbb5" >
+			<when expression="#[attributes.queryParams.userId != null]">
+				<db:select doc:name="Select" doc:id="79585296-d70f-408b-9d38-03ac3e1eb193" config-ref="rdbms_master_db_config">
+					<reconnect />
+					<db:sql ><![CDATA[SELECT "TaskId", "Title", "Module" , "TaskStatus" FROM View_TaskMaster WHERE "TaskAssigner" = :userId  AND "TaskStatus" = 'Self_Commit']]></db:sql>
+					<db:input-parameters ><![CDATA[#[{'userId' : attributes.queryParams.userId}]]]></db:input-parameters>
+				</db:select>
+			</when>
+			<otherwise >
+				<db:select doc:name="Select" doc:id="64c3519a-033b-459a-a8e3-aaa4479d9322" config-ref="rdbms_master_db_config">
+					<reconnect />
+					<db:sql ><![CDATA[SELECT "TaskId", "Title", "Module" , "TaskStatus" FROM View_TaskMaster WHERE "TaskStatus" = 'Self_Commit']]></db:sql>
+				</db:select>
+			</otherwise>
+		</choice>
+		<ee:transform doc:name="Transform Message" doc:id="dac30709-c178-4240-a306-b5ae1975d6e5" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="getVerificationDeletes" doc:id="4e8d9e74-229c-45e3-8b19-59faf43d71b3" >
+		<choice doc:name="Choice" doc:id="c6622fc4-2dbb-45fb-a0fb-d3bb92557578" >
+			<when expression="#[attributes.queryParams.userId != null]" >
+				<db:select doc:name="Select" doc:id="89c20924-58cb-4c3f-9fe9-21815b18efde" config-ref="rdbms_master_db_config" >
+					<reconnect />
+					<db:sql ><![CDATA[SELECT "TaskId", "Title", "Module" , "TaskStatus" FROM View_TaskMaster WHERE "TaskAssigner" = :userId  AND "TaskStatus" = 'Self_Delete']]></db:sql>
+					<db:input-parameters ><![CDATA[#[{'userId' : attributes.queryParams.userId}]]]></db:input-parameters>
+				</db:select>
+			</when>
+			<otherwise >
+				<db:select doc:name="Select" doc:id="f8b79979-8304-4228-9f02-f5350fbae214" config-ref="rdbms_master_db_config" >
+					<reconnect />
+					<db:sql ><![CDATA[SELECT "TaskId", "Title", "Module" , "TaskStatus" FROM View_TaskMaster WHERE "TaskStatus" = 'Self_Delete']]></db:sql>
+				</db:select>
+			</otherwise>
+		</choice>
+		<ee:transform doc:name="Transform Message" doc:id="675e8132-6a20-4221-a010-79c43571ff97" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="mainTaskVerificationFlow" doc:id="aed3231c-1f3d-48e2-a241-4fe4106b01d6" >
+		<http:listener doc:name="Listener" doc:id="6da6f72f-81ed-4c80-981b-298ca6afc931" config-ref="HTTP_Listener_config" path="/veri"/>
+		<scatter-gather doc:name="Scatter-Gather" doc:id="0bfae903-5a6c-41e7-911c-687077ecd56b" >
+			<route >
+				<flow-ref doc:name="get Verification Commits" doc:id="1fc248df-8751-4eac-b3ed-ba639002687b" name="getVerificationCommits"/>
+			</route>
+			<route >
+				<flow-ref doc:name="get Verification Deletes" doc:id="60a5ff50-d2ce-409b-ac2d-9eb9820f9c81" name="getVerificationDeletes"/>
+			</route>
+		</scatter-gather>
+		<ee:transform doc:name="Transform Message" doc:id="72c7bf48-cfa1-4afd-8bf6-224a84d8524a" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+flatten(payload..payload)]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	
+</mule>

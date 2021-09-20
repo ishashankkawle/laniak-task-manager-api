@@ -1,0 +1,4 @@
+%dw 2.0
+
+type auto_2f5ac52b_70e1_454e_b22f_71672afadd7c_Output_Payload = Array<{|  TaskId?: Number,   Title?: String,   Module?: String,   TaskStatus?: String|}>
+
