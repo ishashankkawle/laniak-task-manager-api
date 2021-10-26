@@ -182,10 +182,53 @@ output application/json
 			</ee:message>
 		</ee:transform>
 	</flow>
+	<flow name="getDetailedTaskSummary" doc:id="ee2ea5c9-3712-4d4f-ae46-580660590048">
+		<db:select doc:name="Select" doc:id="c39ca9c7-16f6-4387-879d-0b11f574b0bf">
+			<db:sql><![CDATA[SELECT "TaskStatus" , count(0) FROM view_taskmaster GROUP BY "TaskStatus"]]></db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="f811fee2-39cf-4a63-81ae-cfd2ceac8f8e">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	totalCount: vars.totalCount as String,
+	activeCount: vars.activeCount as String,
+	completedCount: vars.completedCount as String,
+	moduleData: vars.module
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="getUserBasedDetailedTaskSummary" doc:id="1b0494bd-665e-45f8-bf13-3ec3826f0a76">
+		<db:select doc:name="Select" doc:id="eb7c574a-17d1-4a7e-9ea7-da8c7976ae45" config-ref="rdbms_master_db_config">
+			<db:sql><![CDATA[SELECT "TaskStatus" , count(0) FROM view_taskmaster WHERE "TaskAssigner" = :userId  GROUP BY "TaskStatus"]]></db:sql>
+			<db:input-parameters><![CDATA[#[{'userId' : attributes.queryParams.userId}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="eca1f818-9954-4b8a-a251-00730f9f1bc4">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	totalCount: vars.totalCount as String,
+	activeCount: vars.activeCount as String,
+	completedCount: vars.completedCount as String,
+	moduleData: vars.module
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
 	<flow name="mainTaskSummaryFlow" doc:id="914474bc-c36c-44b0-9ddc-2d80f9797612" >
 		<choice doc:name="Choice" doc:id="02ec15de-dd6d-41db-9458-d55dc56d067f" >
-			<when expression="#[attributes.queryParams.userId != null]">
+			<when expression='#[attributes.queryParams.userId != null and attributes.queryParams.details == "false"]'>
 				<flow-ref doc:name="Call getUserBasedTaskSummary" doc:id="124872e5-3793-4265-9ac8-1d2d677cc4d2" name="getUserBasedTaskSummary"/>
+			</when>
+			<when expression='#[attributes.queryParams.userId == null and attributes.queryParams.details == "false"]'>
+				<flow-ref doc:name="Flow Reference" doc:id="feed2664-d1f8-4072-919d-09482bbf539f" name="getTaskSummary"/>
+			</when>
+			<when expression='#[attributes.queryParams.userId != null and attributes.queryParams.details == "true"]'>
+				<flow-ref doc:name="Flow Reference" doc:id="f5193c00-60ac-4ded-ab02-71fa5d22cc4a" name="getUserBasedDetailedTaskSummary"/>
 			</when>
 			<otherwise >
 				<flow-ref doc:name="Call getTaskSummary" doc:id="17673152-7587-41ad-b639-6d36a4f530e2" name="getTaskSummary"/>
@@ -259,6 +302,85 @@ payload]]></ee:set-payload>
 output application/json
 ---
 flatten(payload..payload)]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="getUserBasedRCSUtilization" doc:id="206a506a-1f4f-4af1-9dc8-8bc845638895" >
+		<db:select doc:name="Select" doc:id="7c6ed62f-221b-4b9d-bcaf-4d3b333cca2e" config-ref="rdbms_master_db_config">
+			<db:sql ><![CDATA[SELECT "Title" , "DateTerminated" , "TaskStatus" , "OwnerName" FROM view_taskmaster WHERE "TaskAssigner" = :userId]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{'userId' : attributes.queryParams.userId}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="0472a294-4bac-4057-b802-d5f82894f42e" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="getAllRCSUtilization" doc:id="03db69af-b7e3-4b70-94a8-772faa6912af" >
+		<db:select doc:name="Select" doc:id="e41cc69d-d70f-4c3d-81b0-fe21d903ea98" config-ref="rdbms_master_db_config" >
+			<db:sql ><![CDATA[SELECT "Title" , "DateTerminated" , "TaskStatus" , "OwnerName" FROM view_taskmaster]]></db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="9fdda18c-8f7e-4451-b833-4435aeb688d6" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="getUserBasedRCSSummary" doc:id="e7d0e391-5f07-4297-8615-e59dc616bf68">
+		<db:select doc:name="Select" doc:id="618108e4-9f62-4edd-ad74-18af8354cd31" config-ref="rdbms_master_db_config">
+			<db:sql><![CDATA[SELECT "OwnerName" , count(0) FROM view_taskmaster WHERE "TaskAssigner" = :userId GROUP BY "OwnerName"]]></db:sql>
+			<db:input-parameters><![CDATA[#[{'userId' : attributes.queryParams.userId}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="b3d76325-4e9f-4be7-9ff2-9c2c96961f79">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="getAllRCSSummary" doc:id="6d11b02c-61bc-4838-913c-444d6ac0773b" >
+		<db:select doc:name="Select" doc:id="2915602e-134c-4fd8-9126-b5993a70a697" config-ref="rdbms_master_db_config">
+			<db:sql ><![CDATA[SELECT "OwnerName" , count(0) FROM view_taskmaster GROUP BY "OwnerName"]]></db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="2b011f1a-0a78-4dc0-826a-c8640040239f" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="mainTaskRCSUtilizationFlow" doc:id="3eaaff66-5f30-4468-a48d-2bc76ef5e11a" >
+		<http:listener doc:name="Listener" doc:id="62ae05e6-0610-4ef3-8159-8bc6486b907f" config-ref="HTTP_Listener_config" path="/assign"/>
+		<choice doc:name="Choice" doc:id="d3a0816d-0deb-444f-a251-5418c6850d79" >
+			<when expression='#[attributes.queryParams.userId != null and attributes.queryParams.summary == "false"]'>
+				<flow-ref doc:name="Flow Reference" doc:id="d664b675-c8a5-4696-8cda-2829d98aff25" name="getUserBasedRCSUtilization"/>
+			</when>
+			<when expression='#[attributes.queryParams.userId == null and attributes.queryParams.summary == "false"]'>
+				<flow-ref doc:name="Flow Reference" doc:id="b2fa9aa7-5d8b-431c-81ff-df678231c9ff" name="getAllRCSUtilization"/>
+			</when>
+			<when expression='#[attributes.queryParams.userId != null and attributes.queryParams.summary == "true"]'>
+				<flow-ref doc:name="Flow Reference" doc:id="ab2bd87d-dd57-42c1-a141-4f0d660c7580" name="getUserBasedRCSSummary"/>
+			</when>
+			<otherwise >
+				<flow-ref doc:name="Flow Reference" doc:id="f8cbdb19-8eb2-4c35-b0e7-1fe1b7f965b0" name="getAllRCSSummary"/>
+			</otherwise>
+		</choice>
+		<ee:transform doc:name="Transform Message" doc:id="2d6c9086-5e24-44c7-83e0-cb48836df489" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
 	</flow>

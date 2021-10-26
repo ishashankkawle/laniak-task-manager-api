@@ -25,7 +25,7 @@ types:
 
 uses:
   library: /exchange_modules/46e89148-259e-4ae9-b06b-bde1fcd96d21/generic_message_responses/1.0.1/generic_message_responses.raml
-
+  
 /project:
   get:
     description: Get all project list.
@@ -158,13 +158,19 @@ uses:
       queryParameters:
         userId: 
           required: false
+        details:
+          required: true
+          enum:
+            - "true"
+            - "false"
       responses:
         200:
           body:
             application/json:
               type: overview_summary
               examples:
-                output: !include Sample Responses/overview_summery_example.raml              
+                output1: !include Sample Responses/overview_summery_example.raml
+                output2: !include Sample Responses/task_assignment_summary_example.raml              
   /verification:
     description: Get all task with Self Commit / Self Delete status
     get:
@@ -205,21 +211,8 @@ uses:
                 type: task_verification_comm_del[]
                 examples:
                   output: !include Sample Responses/task_verification_CommDel_example.raml
-  /assignment:
-    get:
-     description: Get all task assignments
-     queryParameters:
-        userId:
-          required: false
-     responses:
-      200:
-        body:
-          application/json:
-            type: task_assignment_summary
-            examples:
-              output: !include Sample Responses/task_assignment_summary_example.raml
 
-    /rcs_util:
+  /rcs_util:
       description: Get resource Utilization count
       get:
         queryParameters:
