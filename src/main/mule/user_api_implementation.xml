@@ -1,5 +1,163 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd"></mule>
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="getUserById" doc:id="51267987-2ef2-45fe-84a4-7ea5d2f1c67d" >
+		<db:select doc:name="Select" doc:id="15eb3e97-3a80-4b54-b578-fa73d78801e3" config-ref="rdbms_master_db_config">
+			<db:sql ><![CDATA[SELECT "UserId" , "Name" , "RoleId" , "RoleName" From view_userprojectmap WHERE "UserId" = :userId]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{'userId' : attributes.urlParams.ID}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="55cf6904-2145-4736-b2c9-7c22f1e0e105" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="getUserIdFromEmail" doc:id="c8ce8115-81d4-4874-848e-43471f48e60b" >
+		<db:select doc:name="Select" doc:id="e8ac02e5-2de9-475f-acb8-5d0223296eac" config-ref="rdbms_master_db_config" >
+			<db:sql ><![CDATA[SELECT "UserId" From User_master WHERE "Email" = :email]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{'email' : attributes.queryParams.email}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="45da084d-c147-4aad-9a96-9c347901e9e5" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="getUsersFromProjectsOnRoleFilter" doc:id="53d90050-c26e-4804-861b-73103ed99cbf" >
+		<set-variable value="#[attributes.queryParams]" doc:name="Set Variable" doc:id="314a50ab-2468-47fe-bafc-2b8933f8af80" variableName="attributes"/>
+		<db:select doc:name="Select" doc:id="5f062bd8-c1b8-45a2-92d4-42954673d1ea" config-ref="rdbms_master_db_config">
+			<db:sql ><![CDATA[SELECT "RoleId" From view_userprojectmap WHERE "UserId" = :userId]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{'userId' : attributes.queryParams.userId}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="53e044bc-2508-4156-b958-1667b366e7c3" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	roleId: payload.RoleId[0],
+	query : "SELECT \"USerId\" , \"Name\" , \"RoleId\" , \"RoleName\" FROM view_userprojectmap WHERE \"UserId\" <> '" ++ vars.attributes.queryParams.userId ++ "' "
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<choice doc:name="Project Filter" doc:id="c203cb75-aeab-435d-88d9-32444cd8f474" >
+			<when expression='#[vars.attributes.projectFilter == "same Project"]'>
+				<ee:transform doc:name="Add same project filter" doc:id="3de987ca-8fd7-4752-b14c-67f82c7c018e" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload ++ 
+{
+	query : payload.query ++ "and \"ProjectId\" = '" ++ vars.attributes.projectId ++"' "
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<when expression='#[vars.attributes.projectFilter == "other Projects"]'>
+				<ee:transform doc:name="Add other project filter" doc:id="9593848f-815c-4015-a99b-85f3a60df705" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload ++ 
+{
+	query : payload.query ++ "and \"ProjectId\" <> '" ++ vars.attributes.projectId ++"' "
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise >
+				<logger level="INFO" doc:name="Logger" doc:id="5f5edcb7-6df9-41ae-b4ef-ae9c39cc93f7" message="LAN -----&gt; No project Filter"/>
+			</otherwise>
+		</choice>
+		<choice doc:name="Role Filter" doc:id="72367869-4fb7-4b46-aabe-e431a4db7290" >
+			<when expression='#[vars.attributes.roleFilter == "small"]'>
+				<ee:transform doc:name="Add small role filter" doc:id="39475415-1467-4a19-89fa-4fe0de8d9d36" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	query : payload.query ++ "and \"RoleId\" < '" ++ payload.roleId ++"' "
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<when expression='#[vars.attributes.roleFilter == "smaller And Equal"]'>
+				<ee:transform doc:name="Add small or equal role filter" doc:id="c243070f-efaf-4faf-855a-41578c01877e" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	query : payload.query ++ "and \"RoleId\" <= '" ++ payload.roleId ++"' "
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<when expression='#[vars.attributes.roleFilter == "big"]'>
+				<ee:transform doc:name="Add big role filter" doc:id="9ad3aa2d-48b1-41d8-b5c7-14a3e0671495" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	query : payload.query ++ "and \"RoleId\" > '" ++ payload.roleId ++"' "
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<when expression='#[vars.attributes.roleFilter == "bigger And Equal"]'>
+				<ee:transform doc:name="Add big or equal role filter" doc:id="4f29a2dc-aec0-4e2f-a1c5-6c178a640a96" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	query : payload.query ++ "and \"RoleId\" >= '" ++ payload.roleId ++"' "
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise >
+				<ee:transform doc:name="Add equal role filter" doc:id="7ddb424b-8304-40b8-8bc1-77061f28bb72" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	query : payload.query ++ "and \"RoleId\" = '" ++ payload.roleId ++"' "
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</otherwise>
+		</choice>
+		<logger level="INFO" doc:name="Logger" doc:id="a8404f6c-f0e6-4354-a192-90de41f0ea04" message='#["LAN -----&gt; User Data fetch query :: " + payload.query]'/>
+		<db:select doc:name="Select" doc:id="b8c40449-301a-4a92-bbf4-b8abb404899e" config-ref="rdbms_master_db_config">
+			<db:sql ><![CDATA[#[payload.query]]]></db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="b20db5df-0c31-4c44-aa33-6c66eafcdad1" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="mainUserFlow" doc:id="a2a36444-16e9-451d-bdfc-d4813b99ab10" >
+		<http:listener doc:name="Listener" doc:id="3ef49d83-ed7f-49bc-9f73-009281e4f64d" config-ref="HTTP_Listener_config" path="/users"/>
+	</flow>
+</mule>

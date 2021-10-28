@@ -1,5 +1,5 @@
 #%RAML 1.0
-title: Electron-Task-Manager API Spec
+title: V2
 
 types:
   v_task_master: !include Model/v_task_master.raml
@@ -23,6 +23,39 @@ types:
   map_user_project_update: !include Model/map_user_project_update.raml
   task_workflow_operation: !include Model/task_workflow_operation.raml
 
+  user_query1:
+    properties: 
+      email:
+       description: "Email to get UserId"
+       type: string
+       examples:
+        message: "userid@domain.com"
+  
+  user_query2:
+    properties:
+      userId:
+        description: Get user list. To be used along with projectId to get list of users from Same Project based on roleFilter condition
+        examples:
+          message: "U31"
+      projectId:
+          description: Get user list. To be used along with userId to get list of users from Same Project based on roleFilter condition
+          examples:
+            message: "12"
+      roleFilter:
+          description: Get filter on Role level
+          enum:
+            - small
+            - smaller And Equal
+            - big
+            - bigger And Equal
+            - Equal
+      projectFilter:
+          description: Get filter on Project level  
+          enum:
+            - same Project
+            - other Projects
+            - all Projects
+    
 uses:
   library: /exchange_modules/46e89148-259e-4ae9-b06b-bde1fcd96d21/generic_message_responses/1.0.1/generic_message_responses.raml
   
@@ -167,10 +200,10 @@ uses:
         200:
           body:
             application/json:
-              type: overview_summary
               examples:
                 output1: !include Sample Responses/overview_summery_example.raml
-                output2: !include Sample Responses/task_assignment_summary_example.raml              
+                output2: !include Sample Responses/task_assignment_summary_example.raml  
+
   /verification:
     description: Get all task with Self Commit / Self Delete status
     get:
@@ -227,6 +260,7 @@ uses:
                 examples:
                   output_summary_true: !include Sample Responses/task_assignment_rcs_utilization_summary_example.raml
                   output_summary_false: !include Sample Responses/task_assignment_rcs_utilization_example.raml
+
   /{ID}:
     get:
       description: Get single Task
@@ -262,39 +296,8 @@ uses:
 
 /user:
   get:
-    queryParameters:
-      email:
-        description: EmailId to get UserId
-        required: false
-        type: string
-        examples:
-          message: "userid@domain.com"
-      userId:
-        description: Get user list. To be used along with projectId to get list of users from Same Project based on roleFilter condition
-        required: false
-        examples:
-          message: "U31"
-      projectId:
-        description: Get user list. To be used along with userId to get list of users from Same Project based on roleFilter condition
-        required: false
-        examples:
-          message: "12"
-      roleFilter:
-        required: false
-        description: Get filter on Role level
-        enum:
-          - small
-          - smaller And Equal
-          - big
-          - bigger And Equal
-          - Equal
-      projectFilter:
-        required: false
-        description: Get filter on Project level  
-        enum:
-          - same Project
-          - other Projects
-          - all Projects
+    queryString:
+      type: user_query1 | user_query2
     responses:
       200:
         body:

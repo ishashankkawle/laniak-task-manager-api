@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<flow name="getModuleIdFromName" doc:id="36012b60-c5d7-46f5-8302-c3c825950609" >
+		<db:select doc:name="Select" doc:id="500c985f-bd86-4141-81d9-a07fef9ee2a1" config-ref="rdbms_master_db_config">
+			<db:sql ><![CDATA[SELECT "ModuleId" FROM Module_master WHERE "Module" = :moduleName]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{'moduleName' : attributes.queryParams.name}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="45c5e0fa-69a3-4560-86ec-130fad311800" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="getModulesFromProject" doc:id="62fb8a65-ff1b-4aa0-b103-9e4d5e0a36b9" >
+		<db:select doc:name="Select" doc:id="690bb97e-3509-410b-9dc7-bf0bbc55a1b1" config-ref="rdbms_master_db_config">
+			<db:sql ><![CDATA[SELECT "ModuleId" , "Module" FROM View_moduleProjectMap WHERE "ProjectId" = :projectId]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{'projectId' : attributes.queryParams.projectId}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="7a0cc3b0-9285-4364-bfe9-10db6db58eaf" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="mainModuleFlow" doc:id="b1bd3ae3-732f-4da4-9086-ffe5e050c822" >
+		<http:listener doc:name="Listener" doc:id="09fa6dd6-1965-4e37-8f8c-a22c00804dd2" config-ref="HTTP_Listener_config" path="/module"/>
+		<choice doc:name="Choice" doc:id="7db9a8db-9abd-46b5-9f35-2c9f71bd45a7" >
+			<when expression="#[attributes.queryParams.name != null]">
+				<flow-ref doc:name="Flow Reference" doc:id="eea099e4-c80e-4b56-88d2-74881d3e660e" name="getModuleIdFromName"/>
+			</when>
+			<otherwise >
+				<flow-ref doc:name="Flow Reference" doc:id="00a18bbe-5085-47f9-b19b-6482bad16000" name="getModulesFromProject"/>
+			</otherwise>
+		</choice>
+	</flow>
+</mule>
