@@ -35,7 +35,6 @@ payload]]></ee:set-payload>
 		</ee:transform>
 	</flow>
 	<flow name="mainTypeFlow" doc:id="b1bd3ae3-732f-4da4-9086-ffe5e050c822" >
-		<http:listener doc:name="Listener" doc:id="09fa6dd6-1965-4e37-8f8c-a22c00804dd2" config-ref="HTTP_Listener_config" path="/module"/>
 		<choice doc:name="Choice" doc:id="7db9a8db-9abd-46b5-9f35-2c9f71bd45a7" >
 			<when expression="#[attributes.queryParams.name != null]">
 				<flow-ref doc:name="Flow Reference" doc:id="eea099e4-c80e-4b56-88d2-74881d3e660e" name="getTypeIdFromName"/>

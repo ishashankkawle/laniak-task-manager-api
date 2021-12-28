@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<flow name="getAllRoles" doc:id="8cc33f2c-98fb-4d03-9ed5-b4e2e6da54b2" >
+		<db:select doc:name="Select" doc:id="d5e79dab-5fd9-4237-b64b-79282363b2b0" config-ref="rdbms_master_db_config">
+			<db:sql ><![CDATA[SELECT "RoleName" , "SecurityLevel" FROM Role_Master Order By "SecurityLevel" ASC]]></db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="d359bcc1-2576-401a-ba7e-8a652897b571" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="getRoleIdFromUserId" doc:id="91168764-a0ae-439a-9e29-35614b4b3420" >
+		<db:select doc:name="Select" doc:id="23921d87-cdc6-4ce7-9579-b0a09d46d762" config-ref="rdbms_master_db_config" >
+			<db:sql ><![CDATA[SELECT "UserId" , "Name" , "RoleId" , "RoleName" FROM View_UserProjectMap WHERE "UserId" = :userId]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{'userId' : attributes.urlParams.ID}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="23e3aace-0593-4b6e-a198-09c0aac34e85" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="getValidRoleList" doc:id="a34f3c40-2a0d-45ad-868e-561b730e2cda" >
+		<db:select doc:name="Select" doc:id="2d3b7e86-ccba-49cc-98c6-ea500a557416" config-ref="rdbms_master_db_config" >
+			<db:sql ><![CDATA[SELECT "RoleId" , "RoleName" FROM role_master WHERE "SecurityLevel" > :smallRole AND "SecurityLevel" < :highRole]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{'smallRole' : attributes.queryParams.updaterroleid , 'highRole' : attributes.queryParams.userroleid}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="554b957b-b603-4eda-8f55-a1f461ed486b" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="getSmallerRoles" doc:id="ebdd5381-7461-41ec-92cd-c7c65a5eba1f" >
+		<db:select doc:name="Select" doc:id="f38a1146-d821-4ce6-8680-70ffb869ed06" config-ref="rdbms_master_db_config" >
+			<db:sql ><![CDATA[SELECT "RoleId" , "RoleName" FROM role_master WHERE "SecurityLevel" > :smallRole]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{'smallRole' : attributes.queryParams.userroleid}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="c8b8c517-c85d-4dbb-a50f-d90b9071cca8" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="mainRoleFlow" doc:id="966c8905-b024-4b87-bd85-61484e7e46c1" >
+		<choice doc:name="Choice" doc:id="81c4fbce-c99a-4111-ab11-843cfa4dcf55" >
+			<when expression="#[attributes.queryParams.userId != null]">
+				<flow-ref doc:name="getRoleIdFromUserId" doc:id="dafab1e5-eddc-45fa-9cb1-15143a48353d" name="getRoleIdFromUserId"/>
+			</when>
+			<otherwise >
+				<flow-ref doc:name="getAllRoles" doc:id="9e0fc3bc-d670-45dc-8e91-e64367f5e1e1" name="getAllRoles"/>
+			</otherwise>
+		</choice>
+	</flow>
+</mule>

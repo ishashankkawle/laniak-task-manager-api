@@ -1,9 +1,0 @@
-%dw 2.0
-
-type auto_57f5b681_ed08_4f97_aa56_750f51d60a11_Output_Payload = {|
-  totalCount: String, 
-  activeCount: String, 
-  completedCount: String, 
-  moduleData: Array<{|    Module?: String,     count?: Number  |}> | Null
-|}
-

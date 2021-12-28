@@ -158,6 +158,13 @@ payload]]></ee:set-payload>
 		</ee:transform>
 	</flow>
 	<flow name="mainUserFlow" doc:id="a2a36444-16e9-451d-bdfc-d4813b99ab10" >
-		<http:listener doc:name="Listener" doc:id="3ef49d83-ed7f-49bc-9f73-009281e4f64d" config-ref="HTTP_Listener_config" path="/users"/>
+		<choice doc:name="Choice" doc:id="1d7ec75b-ed17-4816-a9b3-cc8d9b2a21bb">
+					<when expression="#[isBlank(attributes.queryParams.email)]">
+						<flow-ref doc:name="getUsersFromProjectsOnRoleFilter" doc:id="b311e115-ff98-41ce-afd4-d3d01364140f" name="getUsersFromProjectsOnRoleFilter" />
+					</when>
+					<otherwise>
+						<flow-ref doc:name="getUserIdFromEmail" doc:id="82f00dc8-c7fc-4471-be2f-70c11dd88e54" name="getUserIdFromEmail" />
+					</otherwise>
+				</choice>
 	</flow>
 </mule>

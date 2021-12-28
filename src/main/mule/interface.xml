@@ -1,9 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd 
+<mule xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd 
 http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
-    <apikit:config name="electron-task-manager-api-spec-config" api="electron-task-manager-api-spec.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
-    <flow name="electron-task-manager-api-spec-main">
-        <http:listener config-ref="HTTP_Listener_config" path="/api/*">
+    <http:listener-config name="v2-httpListenerConfig">
+        <http:listener-connection host="0.0.0.0" port="8082" />
+    </http:listener-config>
+    <apikit:config name="v2-config" api="resource::46e89148-259e-4ae9-b06b-bde1fcd96d21:v2:1.0.2:raml:zip:v2.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+    <flow name="v2-main">
+        <http:listener config-ref="v2-httpListenerConfig" path="/api/*">
             <http:response statusCode="#[vars.httpStatus default 200]">
                 <http:headers>#[vars.outboundHeaders default {}]</http:headers>
             </http:response>
@@ -12,7 +15,7 @@ http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/
                 <http:headers>#[vars.outboundHeaders default {}]</http:headers>
             </http:error-response>
         </http:listener>
-        <apikit:router config-ref="electron-task-manager-api-spec-config" />
+        <apikit:router config-ref="v2-config" />
         <error-handler>
             <on-error-propagate type="APIKIT:BAD_REQUEST">
                 <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
@@ -94,8 +97,8 @@ output application/json
             </on-error-propagate>
         </error-handler>
     </flow>
-    <flow name="electron-task-manager-api-spec-console">
-        <http:listener config-ref="HTTP_Listener_config" path="/console/*">
+    <flow name="v2-console">
+        <http:listener config-ref="v2-httpListenerConfig" path="/console/*">
             <http:response statusCode="#[vars.httpStatus default 200]">
                 <http:headers>#[vars.outboundHeaders default {}]</http:headers>
             </http:response>
@@ -104,7 +107,7 @@ output application/json
                 <http:headers>#[vars.outboundHeaders default {}]</http:headers>
             </http:error-response>
         </http:listener>
-        <apikit:console config-ref="electron-task-manager-api-spec-config" />
+        <apikit:console config-ref="v2-config" />
         <error-handler>
             <on-error-propagate type="APIKIT:NOT_FOUND">
                 <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
@@ -121,24 +124,18 @@ output application/json
             </on-error-propagate>
         </error-handler>
     </flow>
-    <flow name="put:\task\(ID)\operations:application\json:electron-task-manager-api-spec-config">
-        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core">
-            <ee:variables>
-                <ee:set-variable variableName="ID">attributes.uriParams.'ID'</ee:set-variable>
-            </ee:variables>
-        </ee:transform>
-        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
-            <ee:message>
-                <ee:set-payload><![CDATA[%dw 2.0
-output application/json
+    <flow name="put:\task\(ID)\operations:application\json:v2-config">
+		<ee:transform doc:name="Transform Message" doc:id="0013e07e-d9df-4130-9f90-51734a5df13d" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
 ---
 {
-  message: "Record(s) updated successfully"
 }]]></ee:set-payload>
-            </ee:message>
-        </ee:transform>
+			</ee:message>
+		</ee:transform>
     </flow>
-    <flow name="put:\role:electron-task-manager-api-spec-config">
+    <flow name="put:\role:v2-config">
         <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
             <ee:message>
                 <ee:set-payload><![CDATA[%dw 2.0
@@ -150,7 +147,7 @@ output application/json
             </ee:message>
         </ee:transform>
     </flow>
-    <flow name="put:\task:application\json:electron-task-manager-api-spec-config">
+    <flow name="put:\task:application\json:v2-config">
         <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
             <ee:message>
                 <ee:set-payload><![CDATA[%dw 2.0
@@ -162,7 +159,7 @@ output application/json
             </ee:message>
         </ee:transform>
     </flow>
-    <flow name="put:\userprojectmap:application\json:electron-task-manager-api-spec-config">
+    <flow name="put:\userprojectmap:application\json:v2-config">
         <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
             <ee:message>
                 <ee:set-payload><![CDATA[%dw 2.0
@@ -174,7 +171,15 @@ output application/json
             </ee:message>
         </ee:transform>
     </flow>
-    <flow name="put:\user\(ID):application\json:electron-task-manager-api-spec-config">
+    <flow name="put:\task\(ID):application\json:v2-config">
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core">
+            <ee:variables>
+                <ee:set-variable variableName="ID">attributes.uriParams.'ID'</ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <logger level="INFO" message="put:\task\(ID):application\json:v2-config" />
+    </flow>
+    <flow name="put:\user\(ID):application\json:v2-config">
         <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core">
             <ee:variables>
                 <ee:set-variable variableName="ID">attributes.uriParams.'ID'</ee:set-variable>
@@ -191,15 +196,7 @@ output application/json
             </ee:message>
         </ee:transform>
     </flow>
-    <flow name="put:\task\(ID):application\json:electron-task-manager-api-spec-config">
-        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core">
-            <ee:variables>
-                <ee:set-variable variableName="ID">attributes.uriParams.'ID'</ee:set-variable>
-            </ee:variables>
-        </ee:transform>
-		<logger level="INFO" message="put:\task\(ID):application\json:electron-task-manager-api-spec-config" />
-    </flow>
-    <flow name="delete:\module:application\json:electron-task-manager-api-spec-config">
+    <flow name="delete:\module:application\json:v2-config">
         <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
             <ee:message>
                 <ee:set-payload><![CDATA[%dw 2.0
@@ -211,7 +208,7 @@ output application/json
             </ee:message>
         </ee:transform>
     </flow>
-    <flow name="delete:\priority:application\json:electron-task-manager-api-spec-config">
+    <flow name="delete:\priority:application\json:v2-config">
         <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
             <ee:message>
                 <ee:set-payload><![CDATA[%dw 2.0
@@ -223,7 +220,7 @@ output application/json
             </ee:message>
         </ee:transform>
     </flow>
-    <flow name="delete:\project:application\json:electron-task-manager-api-spec-config">
+    <flow name="delete:\project:application\json:v2-config">
         <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
             <ee:message>
                 <ee:set-payload><![CDATA[%dw 2.0
@@ -235,7 +232,7 @@ output application/json
             </ee:message>
         </ee:transform>
     </flow>
-    <flow name="delete:\role:application\json:electron-task-manager-api-spec-config">
+    <flow name="delete:\role:application\json:v2-config">
         <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
             <ee:message>
                 <ee:set-payload><![CDATA[%dw 2.0
@@ -247,7 +244,7 @@ output application/json
             </ee:message>
         </ee:transform>
     </flow>
-    <flow name="delete:\task:application\json:electron-task-manager-api-spec-config">
+    <flow name="delete:\task:application\json:v2-config">
         <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
             <ee:message>
                 <ee:set-payload><![CDATA[%dw 2.0
@@ -259,7 +256,7 @@ output application/json
             </ee:message>
         </ee:transform>
     </flow>
-    <flow name="delete:\type:application\json:electron-task-manager-api-spec-config">
+    <flow name="delete:\type:application\json:v2-config">
         <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
             <ee:message>
                 <ee:set-payload><![CDATA[%dw 2.0
@@ -271,7 +268,7 @@ output application/json
             </ee:message>
         </ee:transform>
     </flow>
-    <flow name="delete:\user:application\json:electron-task-manager-api-spec-config">
+    <flow name="delete:\user:application\json:v2-config">
         <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
             <ee:message>
                 <ee:set-payload><![CDATA[%dw 2.0
@@ -283,7 +280,7 @@ output application/json
             </ee:message>
         </ee:transform>
     </flow>
-    <flow name="delete:\userprojectmap:application\json:electron-task-manager-api-spec-config">
+    <flow name="delete:\userprojectmap:application\json:v2-config">
         <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
             <ee:message>
                 <ee:set-payload><![CDATA[%dw 2.0
@@ -295,277 +292,55 @@ output application/json
             </ee:message>
         </ee:transform>
     </flow>
-    <flow name="get:\task\assignment:electron-task-manager-api-spec-config">
-        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
-            <ee:message>
-                <ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-{
-  new: "5",
-  "in-progress": "2",
-  "self-committed": "10",
-  "self-deleted": "1",
-  committed: "2",
-  deleted: "1"
-}]]></ee:set-payload>
-            </ee:message>
-        </ee:transform>
+    <flow name="get:\task\verification\commit:v2-config">
+		<flow-ref doc:name="getVerificationCommits" doc:id="a255e4a5-c70f-4875-8ea1-91387241907a" name="getVerificationCommits" />
     </flow>
-    <flow name="get:\task\verification\commit:electron-task-manager-api-spec-config">
-        <flow-ref doc:name="Flow Reference" doc:id="34f94b2e-1a6a-4c86-b869-2932230ba4f4" name="getVerificationCommits" />
-        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
-            <ee:message>
-                <ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-payload]]></ee:set-payload>
-            </ee:message>
-        </ee:transform>
+    <flow name="get:\task\verification\delete:v2-config">
+		<flow-ref doc:name="getVerificationDeletes" doc:id="9e5b0582-c112-4c1b-99e2-0571cb8fd11b" name="getVerificationDeletes" />
     </flow>
-    <flow name="get:\task\verification\delete:electron-task-manager-api-spec-config">
-        <flow-ref doc:name="Flow Reference" doc:id="661ba94c-8359-48d7-b130-1ae40be2368f" name="getVerificationDeletes" />
-        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
-            <ee:message>
-                <ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-payload]]></ee:set-payload>
-            </ee:message>
-        </ee:transform>
+    <flow name="get:\module:v2-config">
+		<flow-ref doc:name="mainModuleFlow" doc:id="304c4087-9391-4f9e-a206-555a383e3f94" name="mainModuleFlow" />
     </flow>
-    <flow name="get:\module:electron-task-manager-api-spec-config">
-        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
-            <ee:message>
-                <ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-{
-  ID: 123
-}]]></ee:set-payload>
-            </ee:message>
-        </ee:transform>
+    <flow name="get:\priority:v2-config">
+		<flow-ref doc:name="mainPriorityFlow" doc:id="02c2335e-f7da-4f19-817e-beca15546483" name="mainPriorityFlow" />
     </flow>
-    <flow name="get:\priority:electron-task-manager-api-spec-config">
-        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
-            <ee:message>
-                <ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-{
-  ID: 123
-}]]></ee:set-payload>
-            </ee:message>
-        </ee:transform>
+    <flow name="get:\project:v2-config">
+		<flow-ref doc:name="mainProjectFlow" doc:id="4e8beaa5-d04e-4aa5-8f81-a10cf01d36a4" name="mainPriorityFlow" />
     </flow>
-    <flow name="get:\project:electron-task-manager-api-spec-config">
-        <flow-ref doc:name="Flow Reference" doc:id="82f10b7e-08d0-48c4-8baf-11c073ffdc1e" name="get:\project:electron-task-manager-api-spec-config" />
+    <flow name="get:\task\rcs_util:v2-config">
+		<flow-ref doc:name="mainTaskRCSUtilizationFlow" doc:id="23f6fcd7-6e92-4b82-b97a-f96bfaa91152" name="mainTaskRCSUtilizationFlow" />
     </flow>
-    <flow name="get:\task\assignment\rcs_util:electron-task-manager-api-spec-config">
-        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
-            <ee:message>
-                <ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-[
-  {
-    ownerName: "User 1",
-    count: "14"
-  }, 
-  {
-    ownerName: "User 2",
-    count: "21"
-  }, 
-  {
-    ownerName: "User 3",
-    count: "18"
-  }, 
-  {
-    ownerName: "User 4",
-    count: "17"
-  }
-]]]></ee:set-payload>
-            </ee:message>
-        </ee:transform>
+    <flow name="get:\role:v2-config">
+		<flow-ref doc:name="mainRoleFlow" doc:id="6bf48e4a-2da2-4110-8118-45eca628ba8b" name="mainRoleFlow" />
     </flow>
-    <flow name="get:\role:electron-task-manager-api-spec-config">
-        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
-            <ee:message>
-                <ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-[
-  {
-    roleName: "Administrator",
-    securityLevel: "1"
-  }, 
-  {
-    roleName: "Associate Administrator",
-    securityLevel: "2"
-  }, 
-  {
-    roleName: "Senior Software Engineer",
-    securityLevel: "4"
-  }, 
-  {
-    roleName: "Software Engineer",
-    securityLevel: "5"
-  }
-]]]></ee:set-payload>
-            </ee:message>
-        </ee:transform>
+    <flow name="get:\role\small:v2-config">
+		<flow-ref doc:name="getSmallerRoles" doc:id="baa75da4-6ac9-4b88-b4d5-6187b0a1ec89" name="getSmallerRoles" />
     </flow>
-    <flow name="get:\role\small:electron-task-manager-api-spec-config">
-        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
-            <ee:message>
-                <ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-{
-  ROLES: "roles"
-}]]></ee:set-payload>
-            </ee:message>
-        </ee:transform>
+    <flow name="get:\task\summary:v2-config">
+		<flow-ref doc:name="mainTaskSummaryFlow" doc:id="15378609-8a1b-4e07-a5cb-83aa12318ab4" name="mainTaskSummaryFlow" />
     </flow>
-    <flow name="get:\task\summary:electron-task-manager-api-spec-config">
-        <flow-ref doc:name="Flow Reference" doc:id="ef270aaf-db20-468a-8595-6dca2a2554a7" name="mainTaskSummaryFlow" />
+    <flow name="get:\task:v2-config">
+		<flow-ref doc:name="mainTaskFlow" doc:id="1924a634-80da-4427-98fb-697ff294c8fe" name="mainTaskFlow" />
     </flow>
-    <flow name="get:\task:electron-task-manager-api-spec-config">
-        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
-            <ee:message>
-                <ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-[
-  {
-    taskId: "12",
-    taskAssigner: "Assigner Name",
-    description: "Description",
-    dateCreated: "14-12-2021",
-    dateTerminated: "14-12-2021",
-    module: "Module",
-    order: "Order",
-    taskOwner: "U12",
-    priority: "High",
-    title: "Title",
-    "type": "Bug",
-    taskStatus: "WIP",
-    assignerName: "Name",
-    ownerName: "Name",
-    projectId: "12",
-    project: "Project Name"
-  }, 
-  {
-    taskId: "13",
-    taskAssigner: "Assigner Name 2",
-    description: "Description 2",
-    dateCreated: "14-12-2021",
-    dateTerminated: "14-12-2021",
-    module: "Module",
-    order: "Order",
-    taskOwner: "U14",
-    priority: "High",
-    title: "Title 2",
-    "type": "Bug 2",
-    taskStatus: "WIP",
-    assignerName: "Name 2",
-    ownerName: "Name 2",
-    projectId: "13",
-    project: "Project Name 2"
-  }
-]]]></ee:set-payload>
-            </ee:message>
-        </ee:transform>
+    <flow name="get:\type:v2-config">
+		<flow-ref doc:name="mainTypeFlow" doc:id="26e68091-c3cb-4111-b551-8c39b17751b3" name="mainTypeFlow" />
     </flow>
-    <flow name="get:\type:electron-task-manager-api-spec-config">
-        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
-            <ee:message>
-                <ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-{
-  ID: 123
-}]]></ee:set-payload>
-            </ee:message>
-        </ee:transform>
+    <flow name="get:\user:v2-config">
+		<flow-ref doc:name="mainUserFlow" doc:id="6e3638e7-d642-476a-9571-b55bc72cacf8" name="mainUserFlow" />
     </flow>
-    <flow name="get:\user:electron-task-manager-api-spec-config">
-        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
-            <ee:message>
-                <ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-{
-  userId: "U12",
-  userName: "User1",
-  roleId: "7",
-  roleName: "Software Engineer"
-}]]></ee:set-payload>
-            </ee:message>
-        </ee:transform>
+    <flow name="get:\role\validlist:v2-config">
+		<flow-ref doc:name="getValidRoleList" doc:id="473163c8-d8ac-4755-a137-49366c742298" name="getValidRoleList" />
     </flow>
-    <flow name="get:\role\validlist:electron-task-manager-api-spec-config">
-        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
-            <ee:message>
-                <ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-{
-  ROLES: "roles"
-}]]></ee:set-payload>
-            </ee:message>
-        </ee:transform>
+    <flow name="get:\task\verification:v2-config">
+		<flow-ref doc:name="mainTaskVerificationFlow" doc:id="b2df3924-228f-429e-be28-135625d0e6a5" name="mainTaskVerificationFlow" />
     </flow>
-    <flow name="get:\task\verification:electron-task-manager-api-spec-config">
-        <flow-ref doc:name="Flow Reference" doc:id="0d0149c8-d8a2-4533-a11d-339e227b97b4" name="mainTaskVerificationFlow" />
+    <flow name="get:\task\(ID):v2-config">
+		<flow-ref doc:name="getTasksById" doc:id="8e8f1b65-bde1-49d2-9551-e82793fdf81f" name="getTasksById" />
     </flow>
-    <flow name="get:\user\(ID):electron-task-manager-api-spec-config">
-        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core">
-            <ee:variables>
-                <ee:set-variable variableName="ID">attributes.uriParams.'ID'</ee:set-variable>
-            </ee:variables>
-        </ee:transform>
-        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
-            <ee:message>
-                <ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-{
-  UserId: 123,
-  RoleId: 10
-}]]></ee:set-payload>
-            </ee:message>
-        </ee:transform>
+    <flow name="get:\user\(ID):v2-config">
+		<flow-ref doc:name="getUserById" doc:id="7af263e6-c1d4-419d-9f08-c36b0f172360" name="getUserById" />
     </flow>
-    <flow name="get:\task\(ID):electron-task-manager-api-spec-config">
-        <flow-ref doc:name="Flow Reference" doc:id="7b888780-7589-43b7-814e-344fed62870b" name="getTasksById"/>
-		<ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
-            <ee:message>
-                <ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-{
-  taskId: "12",
-  taskAssigner: "Assigner Name",
-  description: "Description",
-  dateCreated: "14-12-2021",
-  dateTerminated: "14-12-2021",
-  module: "Module",
-  order: "Order",
-  taskOwner: "U12",
-  priority: "High",
-  title: "Title",
-  "type": "Bug",
-  taskStatus: "WIP",
-  assignerName: "Name",
-  ownerName: "Name",
-  projectId: "12",
-  project: "Project Name"
-}]]></ee:set-payload>
-            </ee:message>
-        </ee:transform>
-    </flow>
-    <flow name="post:\module:application\json:electron-task-manager-api-spec-config">
+    <flow name="post:\module:application\json:v2-config">
         <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
             <ee:message>
                 <ee:set-payload><![CDATA[%dw 2.0
@@ -577,7 +352,7 @@ output application/json
             </ee:message>
         </ee:transform>
     </flow>
-    <flow name="post:\moduleprojectmap:application\json:electron-task-manager-api-spec-config">
+    <flow name="post:\moduleprojectmap:application\json:v2-config">
         <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
             <ee:message>
                 <ee:set-payload><![CDATA[%dw 2.0
@@ -589,7 +364,7 @@ output application/json
             </ee:message>
         </ee:transform>
     </flow>
-    <flow name="post:\priority:application\json:electron-task-manager-api-spec-config">
+    <flow name="post:\priority:application\json:v2-config">
         <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
             <ee:message>
                 <ee:set-payload><![CDATA[%dw 2.0
@@ -601,7 +376,7 @@ output application/json
             </ee:message>
         </ee:transform>
     </flow>
-    <flow name="post:\priorityprojectmap:application\json:electron-task-manager-api-spec-config">
+    <flow name="post:\priorityprojectmap:application\json:v2-config">
         <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
             <ee:message>
                 <ee:set-payload><![CDATA[%dw 2.0
@@ -613,7 +388,7 @@ output application/json
             </ee:message>
         </ee:transform>
     </flow>
-    <flow name="post:\project:application\json:electron-task-manager-api-spec-config">
+    <flow name="post:\project:application\json:v2-config">
         <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
             <ee:message>
                 <ee:set-payload><![CDATA[%dw 2.0
@@ -625,7 +400,7 @@ output application/json
             </ee:message>
         </ee:transform>
     </flow>
-    <flow name="post:\role:application\json:electron-task-manager-api-spec-config">
+    <flow name="post:\role:application\json:v2-config">
         <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
             <ee:message>
                 <ee:set-payload><![CDATA[%dw 2.0
@@ -637,7 +412,7 @@ output application/json
             </ee:message>
         </ee:transform>
     </flow>
-    <flow name="post:\task:application\json:electron-task-manager-api-spec-config">
+    <flow name="post:\task:application\json:v2-config">
         <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
             <ee:message>
                 <ee:set-payload><![CDATA[%dw 2.0
@@ -649,7 +424,7 @@ output application/json
             </ee:message>
         </ee:transform>
     </flow>
-    <flow name="post:\type:application\json:electron-task-manager-api-spec-config">
+    <flow name="post:\type:application\json:v2-config">
         <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
             <ee:message>
                 <ee:set-payload><![CDATA[%dw 2.0
@@ -661,7 +436,7 @@ output application/json
             </ee:message>
         </ee:transform>
     </flow>
-    <flow name="post:\typeprojectmap:application\json:electron-task-manager-api-spec-config">
+    <flow name="post:\typeprojectmap:application\json:v2-config">
         <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
             <ee:message>
                 <ee:set-payload><![CDATA[%dw 2.0
@@ -673,7 +448,7 @@ output application/json
             </ee:message>
         </ee:transform>
     </flow>
-    <flow name="post:\user:application\json:electron-task-manager-api-spec-config">
+    <flow name="post:\user:application\json:v2-config">
         <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
             <ee:message>
                 <ee:set-payload><![CDATA[%dw 2.0
@@ -685,7 +460,7 @@ output application/json
             </ee:message>
         </ee:transform>
     </flow>
-    <flow name="post:\userprojectmap:application\json:electron-task-manager-api-spec-config">
+    <flow name="post:\userprojectmap:application\json:v2-config">
         <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
             <ee:message>
                 <ee:set-payload><![CDATA[%dw 2.0

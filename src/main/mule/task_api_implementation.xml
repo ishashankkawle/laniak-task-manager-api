@@ -40,7 +40,6 @@ payload]]></ee:set-payload>
 		</ee:transform>
 	</flow>
 	<flow name="mainTaskFlow" doc:id="ab140abe-e530-4351-ae48-a17943db4c6b" >
-		<http:listener doc:name="Listener" doc:id="25e9b40c-6611-4a5d-a4a8-b2746e887c48" config-ref="HTTP_Listener_config" path="/tsk"/>
 		<choice doc:name="Choice" doc:id="1432e2df-ece6-48bd-8e51-18b266e94208" >
 			<when expression="#[sizeOf(attributes.queryParams) != 0]">
 				<flow-ref doc:name="get Tasks Using Filter" doc:id="0d4b7e39-8363-42f0-805c-f2c16394aa15" name="getTaskOnFilterCondition"/>
@@ -59,7 +58,6 @@ payload]]></ee:set-payload>
 		</ee:transform>
 	</flow>
 	<flow name="getTasksById" doc:id="815a9fb6-0ea8-41c1-8161-2a21d6eec916" >
-		<http:listener doc:name="GET /task/{ID}" doc:id="d361d753-ef10-4bcd-ab90-b4a09cca9d5e" config-ref="HTTP_Listener_config" path="/task/{ID}" allowedMethods="GET"/>
 		<db:select doc:name="Select" doc:id="c37117f2-d757-4d68-988f-d7431125a5b3" config-ref="rdbms_master_db_config">
 			<reconnect />
 			<db:sql ><![CDATA[SELECT * FROM view_taskmaster AS ms WHERE ms."TaskId" = :taskId]]></db:sql>
@@ -225,13 +223,13 @@ output application/json
 				<flow-ref doc:name="Call getUserBasedTaskSummary" doc:id="124872e5-3793-4265-9ac8-1d2d677cc4d2" name="getUserBasedTaskSummary"/>
 			</when>
 			<when expression='#[attributes.queryParams.userId == null and attributes.queryParams.details == "false"]'>
-				<flow-ref doc:name="Flow Reference" doc:id="feed2664-d1f8-4072-919d-09482bbf539f" name="getTaskSummary"/>
+				<flow-ref doc:name="getTaskSummary" doc:id="feed2664-d1f8-4072-919d-09482bbf539f" name="getTaskSummary"/>
 			</when>
 			<when expression='#[attributes.queryParams.userId != null and attributes.queryParams.details == "true"]'>
-				<flow-ref doc:name="Flow Reference" doc:id="f5193c00-60ac-4ded-ab02-71fa5d22cc4a" name="getUserBasedDetailedTaskSummary"/>
+				<flow-ref doc:name="getUserBasedDetailedTaskSummary" doc:id="f5193c00-60ac-4ded-ab02-71fa5d22cc4a" name="getUserBasedDetailedTaskSummary"/>
 			</when>
 			<otherwise >
-				<flow-ref doc:name="Call getTaskSummary" doc:id="17673152-7587-41ad-b639-6d36a4f530e2" name="getTaskSummary"/>
+				<flow-ref doc:name="getTaskSummary" doc:id="17673152-7587-41ad-b639-6d36a4f530e2" name="getTaskSummary"/>
 			</otherwise>
 		</choice>
 		<logger level="INFO" doc:name="Logger" doc:id="a5d76f03-abc1-41cf-90bf-0c73e567a6e4" />
@@ -287,7 +285,6 @@ payload]]></ee:set-payload>
 		</ee:transform>
 	</flow>
 	<flow name="mainTaskVerificationFlow" doc:id="aed3231c-1f3d-48e2-a241-4fe4106b01d6" >
-		<http:listener doc:name="Listener" doc:id="6da6f72f-81ed-4c80-981b-298ca6afc931" config-ref="HTTP_Listener_config" path="/veri"/>
 		<scatter-gather doc:name="Scatter-Gather" doc:id="0bfae903-5a6c-41e7-911c-687077ecd56b" >
 			<route >
 				<flow-ref doc:name="get Verification Commits" doc:id="1fc248df-8751-4eac-b3ed-ba639002687b" name="getVerificationCommits"/>
@@ -360,19 +357,18 @@ payload]]></ee:set-payload>
 		</ee:transform>
 	</flow>
 	<flow name="mainTaskRCSUtilizationFlow" doc:id="3eaaff66-5f30-4468-a48d-2bc76ef5e11a" >
-		<http:listener doc:name="Listener" doc:id="62ae05e6-0610-4ef3-8159-8bc6486b907f" config-ref="HTTP_Listener_config" path="/assign"/>
 		<choice doc:name="Choice" doc:id="d3a0816d-0deb-444f-a251-5418c6850d79" >
 			<when expression='#[attributes.queryParams.userId != null and attributes.queryParams.summary == "false"]'>
-				<flow-ref doc:name="Flow Reference" doc:id="d664b675-c8a5-4696-8cda-2829d98aff25" name="getUserBasedRCSUtilization"/>
+				<flow-ref doc:name="getUserBasedRCSUtilization" doc:id="d664b675-c8a5-4696-8cda-2829d98aff25" name="getUserBasedRCSUtilization"/>
 			</when>
 			<when expression='#[attributes.queryParams.userId == null and attributes.queryParams.summary == "false"]'>
-				<flow-ref doc:name="Flow Reference" doc:id="b2fa9aa7-5d8b-431c-81ff-df678231c9ff" name="getAllRCSUtilization"/>
+				<flow-ref doc:name="getAllRCSUtilization" doc:id="b2fa9aa7-5d8b-431c-81ff-df678231c9ff" name="getAllRCSUtilization"/>
 			</when>
 			<when expression='#[attributes.queryParams.userId != null and attributes.queryParams.summary == "true"]'>
-				<flow-ref doc:name="Flow Reference" doc:id="ab2bd87d-dd57-42c1-a141-4f0d660c7580" name="getUserBasedRCSSummary"/>
+				<flow-ref doc:name="getUserBasedRCSSummary" doc:id="ab2bd87d-dd57-42c1-a141-4f0d660c7580" name="getUserBasedRCSSummary"/>
 			</when>
 			<otherwise >
-				<flow-ref doc:name="Flow Reference" doc:id="f8cbdb19-8eb2-4c35-b0e7-1fe1b7f965b0" name="getAllRCSSummary"/>
+				<flow-ref doc:name="getAllRCSSummary" doc:id="f8cbdb19-8eb2-4c35-b0e7-1fe1b7f965b0" name="getAllRCSSummary"/>
 			</otherwise>
 		</choice>
 		<ee:transform doc:name="Transform Message" doc:id="2d6c9086-5e24-44c7-83e0-cb48836df489" >

@@ -102,16 +102,4 @@ payload]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
 	</flow>
-	<flow name="laniak-core-apiFlow" doc:id="414710c9-8d65-495d-ac6f-5a36afcf4e22" >
-		<http:listener doc:name="GET /nosql" doc:id="0e9f8a55-1083-4a05-8cef-56c11e759829" config-ref="HTTP_Listener_config" path="/nosql"/>
-		<mongo:collection-exists doc:name="Collection exists" doc:id="8324c256-ae27-4315-9d67-b882ab007627" config-ref="mongo_db_config" collectionName="TSSTaskHistory.TSSTaskHistoryCollection"/>
-		<ee:transform doc:name="Transform Message" doc:id="dc2653f2-32ac-4882-b15b-b14698e1750d" >
-			<ee:message >
-				<ee:set-payload ><![CDATA[%dw 2.0
-output application/json
----
-payload]]></ee:set-payload>
-			</ee:message>
-		</ee:transform>
-	</flow>
 </mule>

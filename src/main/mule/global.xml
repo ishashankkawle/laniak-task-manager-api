@@ -6,13 +6,7 @@
 http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
 http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
 http://www.mulesoft.org/schema/mule/mongo http://www.mulesoft.org/schema/mule/mongo/current/mule-mongo.xsd">
-	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="e7b3075a-4b61-4d90-b336-19896f52cf40" >
-		<http:listener-connection host="0.0.0.0" port="8081" />
-	</http:listener-config>
 	<db:config name="rdbms_master_db_config" doc:name="Database Config" doc:id="3bca79e3-da4e-4e3b-a6bb-5252b5bcf57d" >
 		<db:generic-connection url="jdbc:postgresql://drona.db.elephantsql.com:5432/uuktnljs" driverClassName="org.postgresql.Driver" user="uuktnljs" password="Bd-dHv74TDkC-XcBp5Sp-du4xiomzwo1" />
 	</db:config>
-	<mongo:config name="mongo_db_config" doc:name="MongoDB Config" doc:id="cf3ba01d-e2c8-4c7e-b52a-b03fd14f1d61" >
-		<mongo:connection-string-connection connectionString="mongodb+srv://ets_admin:SmX9qhyXD0qlUhkF@tsstaskcluster.8gnng.mongodb.net/myFirstDatabase?retryWrites=true&amp;w=majority" />
-	</mongo:config>
 </mule>

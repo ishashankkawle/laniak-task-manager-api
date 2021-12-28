@@ -1,4 +1,0 @@
-%dw 2.0
-
-type auto_aed3231c_1f3d_48e2_a241_4fe4106b01d6_Output_Payload = Array<{  module: String,   title: String,   taskId: String,   taskStatus: String,   _?: Any} {"description": "Datatype for Task Verification screen"}>
-

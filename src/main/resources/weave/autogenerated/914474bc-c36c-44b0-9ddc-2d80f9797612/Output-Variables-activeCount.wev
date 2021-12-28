@@ -1,4 +1,0 @@
-%dw 2.0
-
-type auto_914474bc_c36c_44b0_9ddc_2d80f9797612_Output_Variables_activeCount = Number | Null
-
