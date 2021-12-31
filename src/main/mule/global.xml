@@ -9,4 +9,7 @@ http://www.mulesoft.org/schema/mule/mongo http://www.mulesoft.org/schema/mule/mo
 	<db:config name="rdbms_master_db_config" doc:name="Database Config" doc:id="3bca79e3-da4e-4e3b-a6bb-5252b5bcf57d" >
 		<db:generic-connection url="jdbc:postgresql://drona.db.elephantsql.com:5432/uuktnljs" driverClassName="org.postgresql.Driver" user="uuktnljs" password="Bd-dHv74TDkC-XcBp5Sp-du4xiomzwo1" />
 	</db:config>
+	<mongo:config name="MongoDB_Config" doc:name="MongoDB Config" doc:id="d75614b3-01b2-4914-9852-14336ff85d5d" >
+		<mongo:connection-string-connection connectionString="mongodb+srv://ets_admin:adreno%40123@tsstaskcluster.8gnng.mongodb.net/ETMHistoryDatabase?retryWrites=true&amp;w=majority" />
+	</mongo:config>
 </mule>

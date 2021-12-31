@@ -89,7 +89,7 @@
 		<dependency>
 			<groupId>46e89148-259e-4ae9-b06b-bde1fcd96d21</groupId>
 			<artifactId>v2</artifactId>
-			<version>1.0.2</version>
+			<version>1.0.4</version>
 			<classifier>raml</classifier>
 			<type>zip</type>
 		</dependency>

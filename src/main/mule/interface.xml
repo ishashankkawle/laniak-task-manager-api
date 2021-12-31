@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<mule xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd 
-http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd  http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
     <http:listener-config name="v2-httpListenerConfig">
         <http:listener-connection host="0.0.0.0" port="8082" />
     </http:listener-config>
-    <apikit:config name="v2-config" api="resource::46e89148-259e-4ae9-b06b-bde1fcd96d21:v2:1.0.2:raml:zip:v2.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+    <apikit:config name="v2-config" api="resource::46e89148-259e-4ae9-b06b-bde1fcd96d21:v2:1.0.4:raml:zip:v2.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
     <flow name="v2-main">
         <http:listener config-ref="v2-httpListenerConfig" path="/api/*">
             <http:response statusCode="#[vars.httpStatus default 200]">
@@ -18,7 +17,7 @@ http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/
         <apikit:router config-ref="v2-config" />
         <error-handler>
             <on-error-propagate type="APIKIT:BAD_REQUEST">
-                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
                     <ee:message>
                         <ee:set-payload><![CDATA[%dw 2.0
 output application/json
@@ -31,7 +30,7 @@ output application/json
                 </ee:transform>
             </on-error-propagate>
             <on-error-propagate type="APIKIT:NOT_FOUND">
-                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
                     <ee:message>
                         <ee:set-payload><![CDATA[%dw 2.0
 output application/json
@@ -44,7 +43,7 @@ output application/json
                 </ee:transform>
             </on-error-propagate>
             <on-error-propagate type="APIKIT:METHOD_NOT_ALLOWED">
-                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
                     <ee:message>
                         <ee:set-payload><![CDATA[%dw 2.0
 output application/json
@@ -57,7 +56,7 @@ output application/json
                 </ee:transform>
             </on-error-propagate>
             <on-error-propagate type="APIKIT:NOT_ACCEPTABLE">
-                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
                     <ee:message>
                         <ee:set-payload><![CDATA[%dw 2.0
 output application/json
@@ -70,7 +69,7 @@ output application/json
                 </ee:transform>
             </on-error-propagate>
             <on-error-propagate type="APIKIT:UNSUPPORTED_MEDIA_TYPE">
-                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
                     <ee:message>
                         <ee:set-payload><![CDATA[%dw 2.0
 output application/json
@@ -83,7 +82,7 @@ output application/json
                 </ee:transform>
             </on-error-propagate>
             <on-error-propagate type="APIKIT:NOT_IMPLEMENTED">
-                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
                     <ee:message>
                         <ee:set-payload><![CDATA[%dw 2.0
 output application/json
@@ -110,7 +109,7 @@ output application/json
         <apikit:console config-ref="v2-config" />
         <error-handler>
             <on-error-propagate type="APIKIT:NOT_FOUND">
-                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
                     <ee:message>
                         <ee:set-payload><![CDATA[%dw 2.0
 output application/json
@@ -125,18 +124,18 @@ output application/json
         </error-handler>
     </flow>
     <flow name="put:\task\(ID)\operations:application\json:v2-config">
-		<ee:transform doc:name="Transform Message" doc:id="0013e07e-d9df-4130-9f90-51734a5df13d" >
-			<ee:message >
-				<ee:set-payload ><![CDATA[%dw 2.0
+        <ee:transform doc:name="Transform Message" doc:id="0013e07e-d9df-4130-9f90-51734a5df13d">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
 output application/java
 ---
 {
 }]]></ee:set-payload>
-			</ee:message>
-		</ee:transform>
+            </ee:message>
+        </ee:transform>
     </flow>
     <flow name="put:\role:v2-config">
-        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+        <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
             <ee:message>
                 <ee:set-payload><![CDATA[%dw 2.0
 output application/json
@@ -148,7 +147,7 @@ output application/json
         </ee:transform>
     </flow>
     <flow name="put:\task:application\json:v2-config">
-        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+        <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
             <ee:message>
                 <ee:set-payload><![CDATA[%dw 2.0
 output application/json
@@ -160,7 +159,7 @@ output application/json
         </ee:transform>
     </flow>
     <flow name="put:\userprojectmap:application\json:v2-config">
-        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+        <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
             <ee:message>
                 <ee:set-payload><![CDATA[%dw 2.0
 output application/json
@@ -172,7 +171,7 @@ output application/json
         </ee:transform>
     </flow>
     <flow name="put:\task\(ID):application\json:v2-config">
-        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core">
+        <ee:transform>
             <ee:variables>
                 <ee:set-variable variableName="ID">attributes.uriParams.'ID'</ee:set-variable>
             </ee:variables>
@@ -180,12 +179,12 @@ output application/json
         <logger level="INFO" message="put:\task\(ID):application\json:v2-config" />
     </flow>
     <flow name="put:\user\(ID):application\json:v2-config">
-        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core">
+        <ee:transform>
             <ee:variables>
                 <ee:set-variable variableName="ID">attributes.uriParams.'ID'</ee:set-variable>
             </ee:variables>
         </ee:transform>
-        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+        <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
             <ee:message>
                 <ee:set-payload><![CDATA[%dw 2.0
 output application/json
@@ -197,7 +196,7 @@ output application/json
         </ee:transform>
     </flow>
     <flow name="delete:\module:application\json:v2-config">
-        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+        <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
             <ee:message>
                 <ee:set-payload><![CDATA[%dw 2.0
 output application/json
@@ -209,7 +208,7 @@ output application/json
         </ee:transform>
     </flow>
     <flow name="delete:\priority:application\json:v2-config">
-        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+        <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
             <ee:message>
                 <ee:set-payload><![CDATA[%dw 2.0
 output application/json
@@ -221,7 +220,7 @@ output application/json
         </ee:transform>
     </flow>
     <flow name="delete:\project:application\json:v2-config">
-        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+        <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
             <ee:message>
                 <ee:set-payload><![CDATA[%dw 2.0
 output application/json
@@ -233,7 +232,7 @@ output application/json
         </ee:transform>
     </flow>
     <flow name="delete:\role:application\json:v2-config">
-        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+        <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
             <ee:message>
                 <ee:set-payload><![CDATA[%dw 2.0
 output application/json
@@ -245,7 +244,7 @@ output application/json
         </ee:transform>
     </flow>
     <flow name="delete:\task:application\json:v2-config">
-        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+        <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
             <ee:message>
                 <ee:set-payload><![CDATA[%dw 2.0
 output application/json
@@ -257,7 +256,7 @@ output application/json
         </ee:transform>
     </flow>
     <flow name="delete:\type:application\json:v2-config">
-        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+        <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
             <ee:message>
                 <ee:set-payload><![CDATA[%dw 2.0
 output application/json
@@ -269,7 +268,7 @@ output application/json
         </ee:transform>
     </flow>
     <flow name="delete:\user:application\json:v2-config">
-        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+        <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
             <ee:message>
                 <ee:set-payload><![CDATA[%dw 2.0
 output application/json
@@ -281,7 +280,7 @@ output application/json
         </ee:transform>
     </flow>
     <flow name="delete:\userprojectmap:application\json:v2-config">
-        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+        <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
             <ee:message>
                 <ee:set-payload><![CDATA[%dw 2.0
 output application/json
@@ -293,55 +292,55 @@ output application/json
         </ee:transform>
     </flow>
     <flow name="get:\task\verification\commit:v2-config">
-		<flow-ref doc:name="getVerificationCommits" doc:id="a255e4a5-c70f-4875-8ea1-91387241907a" name="getVerificationCommits" />
+        <flow-ref doc:name="getVerificationCommits" doc:id="a255e4a5-c70f-4875-8ea1-91387241907a" name="getVerificationCommits" />
     </flow>
     <flow name="get:\task\verification\delete:v2-config">
-		<flow-ref doc:name="getVerificationDeletes" doc:id="9e5b0582-c112-4c1b-99e2-0571cb8fd11b" name="getVerificationDeletes" />
+        <flow-ref doc:name="getVerificationDeletes" doc:id="9e5b0582-c112-4c1b-99e2-0571cb8fd11b" name="getVerificationDeletes" />
     </flow>
     <flow name="get:\module:v2-config">
-		<flow-ref doc:name="mainModuleFlow" doc:id="304c4087-9391-4f9e-a206-555a383e3f94" name="mainModuleFlow" />
+        <flow-ref doc:name="mainModuleFlow" doc:id="304c4087-9391-4f9e-a206-555a383e3f94" name="mainModuleFlow" />
     </flow>
     <flow name="get:\priority:v2-config">
-		<flow-ref doc:name="mainPriorityFlow" doc:id="02c2335e-f7da-4f19-817e-beca15546483" name="mainPriorityFlow" />
+        <flow-ref doc:name="mainPriorityFlow" doc:id="02c2335e-f7da-4f19-817e-beca15546483" name="mainPriorityFlow" />
     </flow>
     <flow name="get:\project:v2-config">
-		<flow-ref doc:name="mainProjectFlow" doc:id="4e8beaa5-d04e-4aa5-8f81-a10cf01d36a4" name="mainPriorityFlow" />
+        <flow-ref doc:name="mainProjectFlow" doc:id="4e8beaa5-d04e-4aa5-8f81-a10cf01d36a4" name="mainPriorityFlow" />
     </flow>
     <flow name="get:\task\rcs_util:v2-config">
-		<flow-ref doc:name="mainTaskRCSUtilizationFlow" doc:id="23f6fcd7-6e92-4b82-b97a-f96bfaa91152" name="mainTaskRCSUtilizationFlow" />
+        <flow-ref doc:name="mainTaskRCSUtilizationFlow" doc:id="23f6fcd7-6e92-4b82-b97a-f96bfaa91152" name="mainTaskRCSUtilizationFlow" />
     </flow>
     <flow name="get:\role:v2-config">
-		<flow-ref doc:name="mainRoleFlow" doc:id="6bf48e4a-2da2-4110-8118-45eca628ba8b" name="mainRoleFlow" />
+        <flow-ref doc:name="mainRoleFlow" doc:id="6bf48e4a-2da2-4110-8118-45eca628ba8b" name="mainRoleFlow" />
     </flow>
     <flow name="get:\role\small:v2-config">
-		<flow-ref doc:name="getSmallerRoles" doc:id="baa75da4-6ac9-4b88-b4d5-6187b0a1ec89" name="getSmallerRoles" />
+        <flow-ref doc:name="getSmallerRoles" doc:id="baa75da4-6ac9-4b88-b4d5-6187b0a1ec89" name="getSmallerRoles" />
     </flow>
     <flow name="get:\task\summary:v2-config">
-		<flow-ref doc:name="mainTaskSummaryFlow" doc:id="15378609-8a1b-4e07-a5cb-83aa12318ab4" name="mainTaskSummaryFlow" />
+        <flow-ref doc:name="mainTaskSummaryFlow" doc:id="15378609-8a1b-4e07-a5cb-83aa12318ab4" name="mainTaskSummaryFlow" />
     </flow>
     <flow name="get:\task:v2-config">
-		<flow-ref doc:name="mainTaskFlow" doc:id="1924a634-80da-4427-98fb-697ff294c8fe" name="mainTaskFlow" />
+        <flow-ref doc:name="mainTaskFlow" doc:id="1924a634-80da-4427-98fb-697ff294c8fe" name="mainTaskFlow" />
     </flow>
     <flow name="get:\type:v2-config">
-		<flow-ref doc:name="mainTypeFlow" doc:id="26e68091-c3cb-4111-b551-8c39b17751b3" name="mainTypeFlow" />
+        <flow-ref doc:name="mainTypeFlow" doc:id="26e68091-c3cb-4111-b551-8c39b17751b3" name="mainTypeFlow" />
     </flow>
     <flow name="get:\user:v2-config">
-		<flow-ref doc:name="mainUserFlow" doc:id="6e3638e7-d642-476a-9571-b55bc72cacf8" name="mainUserFlow" />
+        <flow-ref doc:name="mainUserFlow" doc:id="6e3638e7-d642-476a-9571-b55bc72cacf8" name="mainUserFlow" />
     </flow>
     <flow name="get:\role\validlist:v2-config">
-		<flow-ref doc:name="getValidRoleList" doc:id="473163c8-d8ac-4755-a137-49366c742298" name="getValidRoleList" />
+        <flow-ref doc:name="getValidRoleList" doc:id="473163c8-d8ac-4755-a137-49366c742298" name="getValidRoleList" />
     </flow>
     <flow name="get:\task\verification:v2-config">
-		<flow-ref doc:name="mainTaskVerificationFlow" doc:id="b2df3924-228f-429e-be28-135625d0e6a5" name="mainTaskVerificationFlow" />
+        <flow-ref doc:name="mainTaskVerificationFlow" doc:id="b2df3924-228f-429e-be28-135625d0e6a5" name="mainTaskVerificationFlow" />
     </flow>
     <flow name="get:\task\(ID):v2-config">
-		<flow-ref doc:name="getTasksById" doc:id="8e8f1b65-bde1-49d2-9551-e82793fdf81f" name="getTasksById" />
+        <flow-ref doc:name="getTasksById" doc:id="8e8f1b65-bde1-49d2-9551-e82793fdf81f" name="getTasksById" />
     </flow>
     <flow name="get:\user\(ID):v2-config">
-		<flow-ref doc:name="getUserById" doc:id="7af263e6-c1d4-419d-9f08-c36b0f172360" name="getUserById" />
+        <flow-ref doc:name="getUserById" doc:id="7af263e6-c1d4-419d-9f08-c36b0f172360" name="getUserById" />
     </flow>
     <flow name="post:\module:application\json:v2-config">
-        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+        <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
             <ee:message>
                 <ee:set-payload><![CDATA[%dw 2.0
 output application/json
@@ -353,7 +352,7 @@ output application/json
         </ee:transform>
     </flow>
     <flow name="post:\moduleprojectmap:application\json:v2-config">
-        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+        <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
             <ee:message>
                 <ee:set-payload><![CDATA[%dw 2.0
 output application/json
@@ -365,7 +364,7 @@ output application/json
         </ee:transform>
     </flow>
     <flow name="post:\priority:application\json:v2-config">
-        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+        <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
             <ee:message>
                 <ee:set-payload><![CDATA[%dw 2.0
 output application/json
@@ -377,7 +376,7 @@ output application/json
         </ee:transform>
     </flow>
     <flow name="post:\priorityprojectmap:application\json:v2-config">
-        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+        <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
             <ee:message>
                 <ee:set-payload><![CDATA[%dw 2.0
 output application/json
@@ -389,19 +388,10 @@ output application/json
         </ee:transform>
     </flow>
     <flow name="post:\project:application\json:v2-config">
-        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
-            <ee:message>
-                <ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-{
-  message: "Record(s) added successfully"
-}]]></ee:set-payload>
-            </ee:message>
-        </ee:transform>
+        <flow-ref doc:name="createNewProject" doc:id="54b22bd8-56b3-4f64-852d-5464b3cf254d" name="createNewProject" />
     </flow>
     <flow name="post:\role:application\json:v2-config">
-        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+        <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
             <ee:message>
                 <ee:set-payload><![CDATA[%dw 2.0
 output application/json
@@ -413,7 +403,7 @@ output application/json
         </ee:transform>
     </flow>
     <flow name="post:\task:application\json:v2-config">
-        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+        <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
             <ee:message>
                 <ee:set-payload><![CDATA[%dw 2.0
 output application/json
@@ -425,7 +415,7 @@ output application/json
         </ee:transform>
     </flow>
     <flow name="post:\type:application\json:v2-config">
-        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+        <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
             <ee:message>
                 <ee:set-payload><![CDATA[%dw 2.0
 output application/json
@@ -437,7 +427,7 @@ output application/json
         </ee:transform>
     </flow>
     <flow name="post:\typeprojectmap:application\json:v2-config">
-        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+        <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
             <ee:message>
                 <ee:set-payload><![CDATA[%dw 2.0
 output application/json
@@ -449,7 +439,7 @@ output application/json
         </ee:transform>
     </flow>
     <flow name="post:\user:application\json:v2-config">
-        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+        <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
             <ee:message>
                 <ee:set-payload><![CDATA[%dw 2.0
 output application/json
@@ -461,7 +451,7 @@ output application/json
         </ee:transform>
     </flow>
     <flow name="post:\userprojectmap:application\json:v2-config">
-        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+        <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
             <ee:message>
                 <ee:set-payload><![CDATA[%dw 2.0
 output application/json

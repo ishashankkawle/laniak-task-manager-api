@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="generateNewId" doc:id="9a0cfc52-4f75-4740-b77a-9547f87e8f57" >
+		<db:select doc:name="Generate new Id" doc:id="68e3b3f7-ccd9-4562-925a-507bac2eb31e" config-ref="rdbms_master_db_config" >
+			<db:sql ><![CDATA[SELECT  nextval('master_db_id_sequence') FROM dual]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{"projectname" : payload.title}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="JAVA to JSON" doc:id="b41b7879-9ba4-4323-a822-91c7fbe10b9b" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload[0]]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>

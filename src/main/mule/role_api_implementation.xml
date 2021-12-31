@@ -71,4 +71,19 @@ payload]]></ee:set-payload>
 			</otherwise>
 		</choice>
 	</flow>
+	<flow name="createNewRole" doc:id="b2090f43-5d49-41e1-be9e-9fac461f16ca" >
+		<set-variable value="#[payload]" doc:name="Set backup_payload" doc:id="5dc359a0-1f56-435c-9edc-0bbf5bb935da" variableName="backup_payload" />
+		<flow-ref doc:name="generateNewId" doc:id="6e70f7bd-bdbb-45b9-94c9-e703afa8141c" name="generateNewId" />
+		<set-variable value='#[%dw 2.0&#10;output application/json&#10;---&#10;vars.backup_payload default{} ++ {"roleId" : payload.nextval}]' doc:name="Reset backup_payload" doc:id="28e7c06d-16ef-48b1-9243-ebc73c7fcc17" variableName="backup_payload" />
+		<try doc:name="Try" doc:id="98399c19-11e8-4e76-a229-7bab8e6936bf" >
+			<db:insert doc:name="Role_Master Insert" doc:id="fb18b09a-befb-4b41-af74-53cb93c16617" config-ref="rdbms_master_db_config">
+				<db:sql ><![CDATA[INSERT INTO role_master ("RoleId", "RoleName", "SecurityLevel") VALUES (:roleid , :rolename , :securitylevel)]]></db:sql>
+				<db:input-parameters ><![CDATA[#[{
+	"roleid" : vars.backup_payload.roleId,
+	"rolename" : vars.backup_payload.roleName,
+	"securitylevel" : vars.backup_payload.securityLevel
+}]]]></db:input-parameters>
+			</db:insert>
+		</try>
+	</flow>
 </mule>

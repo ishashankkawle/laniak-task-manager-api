@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule xmlns:mongo="http://www.mulesoft.org/schema/mule/mongo" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
-	xmlns:db="http://www.mulesoft.org/schema/mule/db"
-	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+<mule xmlns:batch="http://www.mulesoft.org/schema/mule/batch" xmlns:mongo="http://www.mulesoft.org/schema/mule/mongo"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
 http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
 http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
-http://www.mulesoft.org/schema/mule/mongo http://www.mulesoft.org/schema/mule/mongo/current/mule-mongo.xsd">
+http://www.mulesoft.org/schema/mule/mongo http://www.mulesoft.org/schema/mule/mongo/current/mule-mongo.xsd
+http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd">
 	
 	<flow name="getProjectIdFromName" doc:id="747c8a09-fe10-46e6-a06c-547d6344f021" >
 		<set-variable value="#[attributes.queryParams.name]" doc:name="Set Variable" doc:id="8348895b-f273-48e0-87cf-420108f2eb3f" variableName="projectName"/>
@@ -101,5 +102,28 @@ output application/json
 payload]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
+	</flow>
+	<flow name="createNewProject" doc:id="2d8f6554-c2b3-4334-bc20-0be6e539eecb" >
+		<set-variable value="#[payload]" doc:name="Set backup_payload" doc:id="814ab2d7-1b69-4645-8c27-933d3278c8f1" variableName="backup_payload"/>
+		<flow-ref doc:name="generateNewId" doc:id="73244f5c-245e-4328-823a-6cbc99ae48bc" name="generateNewId"/>
+		<set-variable value="#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;	projectId : payload.nextval,&#10;	projectName : vars.backup_payload.title,&#10;	userId : vars.backup_payload.userId&#10;}]" doc:name="Reset backup_payload" doc:id="666475fd-1ef2-4905-aaa2-aea84bb3ba7a" variableName="backup_payload"/>
+		<try doc:name="Try" doc:id="0fa8389e-721a-4a0b-8d95-b873a1e96dde" transactionalAction="ALWAYS_BEGIN">
+			<db:insert doc:name="Project_Master Insert" doc:id="cd769c0e-97bf-434c-a4fe-4de114e73363" config-ref="rdbms_master_db_config">
+						<db:sql><![CDATA[INSERT INTO project_master ("ProjectId", "ProjectName", "DateCreated") VALUES ( :projectid , :projectname , CURRENT_DATE) ]]></db:sql>
+						<db:input-parameters><![CDATA[#[{
+	"projectid" : vars.backup_payload.projectId,
+	"projectname" : vars.backup_payload.projectName
+}]]]></db:input-parameters>
+					</db:insert>
+			<ee:transform doc:name="Transform Message" doc:id="00b99d9b-015a-4516-902e-d0fdad142adb" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+vars.backup_payload]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+			<flow-ref doc:name="createNewUserProjectMap" doc:id="b6157fce-dfb7-488a-bf68-9ce6886fb149" name="createNewUserProjectMap"/>
+		</try>
 	</flow>
 </mule>

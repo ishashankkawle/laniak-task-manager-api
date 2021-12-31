@@ -44,4 +44,27 @@ payload]]></ee:set-payload>
 			</otherwise>
 		</choice>
 	</flow>
+	<flow name="createNewType" doc:id="7499dd5c-bf6f-4b91-8c26-a176d646e680" >
+		<set-variable value="#[payload]" doc:name="Set backup_payload" doc:id="071e8bb2-8949-40f2-99cd-bddf04ad22f6" variableName="backup_payload" />
+		<flow-ref doc:name="generateNewId" doc:id="ce45af05-d5ea-43b7-b8ea-d7e2b20df140" name="generateNewId" />
+		<set-variable value='#[%dw 2.0&#10;output application/json&#10;---&#10;vars.backup_payload default {} ++ {"typeId" : payload.nextval}]' doc:name="Reset backup_payload" doc:id="814c57e2-4e56-4e80-8c1f-e962dbe23397" variableName="backup_payload" />
+		<try doc:name="Try" doc:id="c437ccf6-f072-4d76-b4c2-e0ddd40a6051" transactionalAction="ALWAYS_BEGIN" >
+			<db:insert doc:name="Type_Master Insert" doc:id="47e6d0ba-2157-405e-af6c-44d35ab4578e" config-ref="rdbms_master_db_config" >
+				<db:sql ><![CDATA[INSERT INTO type_master ("TypeId", "Type", "DateCreated") VALUES (:typeid , :type, CURRENT_DATE)]]></db:sql>
+				<db:input-parameters ><![CDATA[#[{
+	"typeid" : vars.backup_payload.typeId,
+	"type" : vars.backup_payload."type"
+}]]]></db:input-parameters>
+			</db:insert>
+			<ee:transform doc:name="Transform Message" doc:id="1fafde95-9b87-41a1-8460-2dd979535bc9" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+vars.backup_payload]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+			<flow-ref doc:name="createNewTypeProjectMap" doc:id="df38c4f8-533b-408d-adea-86c2fb5828c1" name="createNewTypeProjectMap" />
+		</try>
+	</flow>
 </mule>

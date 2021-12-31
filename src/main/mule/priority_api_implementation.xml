@@ -44,4 +44,27 @@ payload]]></ee:set-payload>
 			</otherwise>
 		</choice>
 	</flow>
+	<flow name="createNewPriority" doc:id="aa96b7d7-9cc9-4d52-aaab-5c77bd7ca4dd" >
+		<set-variable value="#[payload]" doc:name="Set backup_payload" doc:id="51168f30-7099-4a26-a005-c1145def1679" variableName="backup_payload" />
+		<flow-ref doc:name="generateNewId" doc:id="17d84647-3d48-4976-bbc9-aa6a9a9b9d37" name="generateNewId" />
+		<set-variable value='#[%dw 2.0&#10;output application/json&#10;---&#10;vars.backup_payload default {} ++ {"priorityId" : payload.nextval}]' doc:name="Reset backup_payload" doc:id="0f6b470e-cebd-4477-9c4f-e83ec43480e5" variableName="backup_payload" />
+		<try doc:name="Try" doc:id="8ff9d48d-09af-4f5a-b037-20feb1ac776b" transactionalAction="ALWAYS_BEGIN" >
+			<db:insert doc:name="Priority_Master Insert" doc:id="f0c62003-851c-43e4-85cf-b3be2f5132d2" config-ref="rdbms_master_db_config" >
+				<db:sql ><![CDATA[INSERT INTO priority_master ("PriorityId", "Priority", "DateCreated") VALUES (:priorityid , :priority, CURRENT_DATE)]]></db:sql>
+				<db:input-parameters ><![CDATA[#[{
+	"priorityid" : vars.backup_payload.priorityId,
+	"priority" : vars.backup_payload.priority
+}]]]></db:input-parameters>
+			</db:insert>
+			<ee:transform doc:name="Transform Message" doc:id="30b30e75-63ad-4873-8bb9-d6f19aff6a1f" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+vars.backup_payload]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+			<flow-ref doc:name="createNewPriorityProjectMap" doc:id="1e59404e-adaa-484a-92fb-3f422050e9ce" name="createNewPriorityProjectMap" />
+		</try>
+	</flow>
 </mule>

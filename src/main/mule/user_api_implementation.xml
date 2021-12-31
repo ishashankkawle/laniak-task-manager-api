@@ -167,4 +167,33 @@ payload]]></ee:set-payload>
 					</otherwise>
 				</choice>
 	</flow>
+	<flow name="createNewUser" doc:id="4cc60c37-6215-4611-bb27-957a39f36438" >
+		<set-variable value="#[payload]" doc:name="Set backup_payload" doc:id="1a78738c-d93c-4324-86b8-d37d223bd713" variableName="backup_payload" />
+		<flow-ref doc:name="generateNewId" doc:id="827e2412-be73-4af1-b17c-1c3d19515833" name="generateNewId" />
+		<set-variable value='#[%dw 2.0&#10;output application/json&#10;---&#10;vars.backup_payload ++ {"userId" : payload.nextval}]' doc:name="Reset backup_payload" doc:id="a48a960d-239e-4864-ae14-1afae2fec523" variableName="backup_payload" />
+		<try doc:name="Try" doc:id="5b95f7a2-dd92-48ed-bcf8-3413fae82dae" transactionalAction="ALWAYS_BEGIN">
+			<db:insert doc:name="User_Master Insert" doc:id="ceefad38-5328-4c20-b938-b6547e6bcdf6" config-ref="rdbms_master_db_config">
+				<db:sql ><![CDATA[INSERT INTO user_master ("UserId", "Name", "Contact", "DOB", "Email", "UserName", "Password", "RoleId", "DateCreated") VALUES (:userid , :name, :contact, :dob, :email, :username, PGP_SYM_ENCRYPT(:password , 'AES_KEY'), :roleid , CURRENT_DATE)]]></db:sql>
+				<db:input-parameters ><![CDATA[#[{
+	"userid" : vars.backup_payload.userId,
+	"name" : vars.backup_payload.name,
+	"contact" : vars.backup_payload.contact,
+	"dob" : vars.backup_payload.dob,
+	"email" : vars.backup_payload.email,
+	"username" : vars.backup_payload.username,
+	"password" : vars.backup_payload.password,
+	"roleid" : vars.backup_payload.roleId
+}]]]></db:input-parameters>
+			</db:insert>
+			<ee:transform doc:name="Transform Message" doc:id="4a7d6311-b2ce-4f05-ac5b-61904b35f571" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+vars.backup_payload]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+			<flow-ref doc:name="createNewUserProjectMap" doc:id="b9475733-75ae-4a37-93c2-d47ae349aab4" name="createNewUserProjectMap" />
+		</try>
+	</flow>
 </mule>

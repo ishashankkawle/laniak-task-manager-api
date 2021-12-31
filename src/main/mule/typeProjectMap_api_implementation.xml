@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<flow name="createNewTypeProjectMap" doc:id="743618d6-0bda-4b1c-b537-bfa160730780" >
+		<ee:transform doc:name="Prepare payload" doc:id="186dd9d8-30c0-4285-b7f0-e7fb11a9085a" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"typeId" : payload.typeId,
+	"projectId" : payload.projectId
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<db:insert doc:name="Type_Project_Map Insert" doc:id="4393d279-06fe-49a6-8fd8-18d4d8be8f2c" config-ref="rdbms_master_db_config" >
+			<db:sql ><![CDATA[INSERT INTO type_project_map ("TypeId" , "ProjectId") VALUES (:typeid , :projectid)]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	"typeid" : vars.backup_payload.typeId,
+	"projectid" : vars.backup_payload.projectId
+}]]]></db:input-parameters>
+		</db:insert>
+	</flow>
+</mule>
