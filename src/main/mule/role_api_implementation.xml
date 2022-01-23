@@ -86,4 +86,24 @@ payload]]></ee:set-payload>
 			</db:insert>
 		</try>
 	</flow>
+	<flow name="updateRoleFlow" doc:id="b24d008d-800c-4dae-9323-6b96a240098e" >
+		<http:listener doc:name="Listener" doc:id="e2864b97-bce9-420e-8ab6-c0a4781f44eb" config-ref="v2-httpListenerConfig" path="/tmp2"/>
+		<ee:transform doc:name="Transform Message" doc:id="86f41625-dd4c-4c7a-9092-08423830f827" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"roleId" : payload.roleId,
+	"field" : payload.field,
+	"fieldValue" : payload.fieldValue
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<set-payload value="#[&quot;UPDATE role_master SET \&quot;&quot; ++ payload.field ++ &quot;\&quot; = '&quot; ++ payload.fieldValue ++ &quot;' WHERE \&quot;RoleId\&quot; = '&quot;++ payload.roleId ++&quot;'&quot;]" doc:name="Set Payload" doc:id="97175176-01e5-4d46-b517-f52e7f9fee2b" />
+		<db:update doc:name="Update" doc:id="93a7d0d1-6f2f-43d5-beb4-abc87df949a6" config-ref="rdbms_master_db_config">
+			<db:sql ><![CDATA[#[payload]]]></db:sql>
+		</db:update>
+		<logger level="INFO" doc:name="Logger" doc:id="72e13ebc-91a4-47d9-824e-c0251430914a" message="#[payload]"/>
+	</flow>
 </mule>

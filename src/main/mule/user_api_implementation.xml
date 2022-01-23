@@ -196,4 +196,25 @@ vars.backup_payload]]></ee:set-payload>
 			<flow-ref doc:name="createNewUserProjectMap" doc:id="b9475733-75ae-4a37-93c2-d47ae349aab4" name="createNewUserProjectMap" />
 		</try>
 	</flow>
+	<flow name="updateUserFlow" doc:id="b82856be-e7fe-4880-8127-9a8ae6b4daad" >
+		<set-variable value="#[payload]" doc:name="Set backup_payload" doc:id="50e9f124-a946-4a3d-870c-af6110005bf4" variableName="backup_payload" />
+		<choice doc:name="Choice" doc:id="992d63de-b682-4411-9310-751b110d94f0" >
+			<when expression='#[vars.backup_payload.isSecret == "true"]'>
+				<set-payload value="#[%dw 2.0&#10;output application/json&#10;---&#10;&quot;UPDATE user_master SET \&quot;&quot; ++ vars.backup_payload.field ++ &quot;\&quot; = PGP_SYM_ENCRYPT('&quot; ++ vars.backup_payload.fieldValue ++ &quot;' , 'AES_KEY') WHERE \&quot;UserId\&quot; = '&quot; ++ vars.backup_payload.userId ++ &quot;'&quot;]" doc:name="Set Payload" doc:id="a50e36fa-42e8-4037-8c65-1216af03ebbf" />
+				<logger level="INFO" doc:name="Logger" doc:id="b97f518d-8ed7-4575-834f-5cf4866f6a22" message="#[payload]"/>
+				<db:update doc:name="Update" doc:id="bb5515a5-9cec-4f4c-a3b2-95c55642cd3b" config-ref="rdbms_master_db_config">
+					<db:sql ><![CDATA[#[payload]]]></db:sql>
+				</db:update>
+				<logger level="INFO" doc:name="Logger" doc:id="9ade6e10-a4d9-405f-84f8-6e788cb95df5" message="#[%dw 2.0&#10;output application/json&#10;---&#10;payload]"/>
+			</when>
+			<otherwise >
+				<set-payload value="#[%dw 2.0&#10;output application/json&#10;---&#10;&quot;UPDATE user_master SET \&quot;&quot; ++ vars.backup_payload.field ++ &quot;\&quot; = '&quot; ++ vars.backup_payload.fieldValue ++ &quot;' WHERE \&quot;UserId\&quot; = '&quot; ++ vars.backup_payload.userId ++ &quot;'&quot;]" doc:name="Set Payload" doc:id="39e71c61-5564-4617-aaab-8229d04e9fa2" />
+				<logger level="INFO" doc:name="Logger" doc:id="bbad78ae-4f10-4a73-a386-50cf7f826d6d" message="#[payload]"/>
+				<db:update doc:name="Update" doc:id="79d7586e-d268-4ed9-9eb0-873f4560edd8" config-ref="rdbms_master_db_config">
+					<db:sql ><![CDATA[#[payload]]]></db:sql>
+				</db:update>
+				<logger level="INFO" doc:name="Logger" doc:id="2b03cdc6-7877-437f-a808-9f96c9394f52" message="#[%dw 2.0&#10;output application/json&#10;---&#10;payload]"/>
+			</otherwise>
+		</choice>
+	</flow>
 </mule>

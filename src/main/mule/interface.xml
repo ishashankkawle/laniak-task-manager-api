@@ -123,77 +123,17 @@ output application/json
             </on-error-propagate>
         </error-handler>
     </flow>
-    <flow name="put:\task\(ID)\operations:application\json:v2-config">
-        <ee:transform doc:name="Transform Message" doc:id="0013e07e-d9df-4130-9f90-51734a5df13d">
-            <ee:message>
-                <ee:set-payload><![CDATA[%dw 2.0
-output application/java
----
-{
-}]]></ee:set-payload>
-            </ee:message>
-        </ee:transform>
-    </flow>
     <flow name="put:\role:v2-config">
-        <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
-            <ee:message>
-                <ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-{
-  "Role updated Successfully": null
-}]]></ee:set-payload>
-            </ee:message>
-        </ee:transform>
-    </flow>
-    <flow name="put:\task:application\json:v2-config">
-        <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
-            <ee:message>
-                <ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-{
-  message: "Record(s) updated successfully"
-}]]></ee:set-payload>
-            </ee:message>
-        </ee:transform>
+		<flow-ref doc:name="updateRoleFlow" doc:id="886d5c73-03d4-440c-801c-409141b8da59" name="updateRoleFlow"/>
     </flow>
     <flow name="put:\userprojectmap:application\json:v2-config">
-        <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
-            <ee:message>
-                <ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-{
-  message: "Record(s) updated successfully"
-}]]></ee:set-payload>
-            </ee:message>
-        </ee:transform>
+		<flow-ref doc:name="updateUserProjectMapFlow" doc:id="12b41224-d136-4805-bcac-ceb938143314" name="updateUserProjectMapFlow"/>
     </flow>
     <flow name="put:\task\(ID):application\json:v2-config">
-        <ee:transform>
-            <ee:variables>
-                <ee:set-variable variableName="ID">attributes.uriParams.'ID'</ee:set-variable>
-            </ee:variables>
-        </ee:transform>
-        <logger level="INFO" message="put:\task\(ID):application\json:v2-config" />
+        <flow-ref doc:name="mainUpdateTaskFlow" doc:id="7f8bcb32-88a9-4b43-9fae-30f1f62e9a16" name="mainUpdateTaskFlow"/>
     </flow>
     <flow name="put:\user\(ID):application\json:v2-config">
-        <ee:transform>
-            <ee:variables>
-                <ee:set-variable variableName="ID">attributes.uriParams.'ID'</ee:set-variable>
-            </ee:variables>
-        </ee:transform>
-        <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
-            <ee:message>
-                <ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-{
-  message: "Record(s) updated successfully"
-}]]></ee:set-payload>
-            </ee:message>
-        </ee:transform>
+		<flow-ref doc:name="updateUserFlow" doc:id="102631bb-1fd4-4ad0-af26-447ec8bfff76" name="updateUserFlow"/>
     </flow>
     <flow name="delete:\module:application\json:v2-config">
         <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
@@ -334,132 +274,42 @@ output application/json
         <flow-ref doc:name="mainTaskVerificationFlow" doc:id="b2df3924-228f-429e-be28-135625d0e6a5" name="mainTaskVerificationFlow" />
     </flow>
     <flow name="get:\task\(ID):v2-config">
-        <flow-ref doc:name="getTasksById" doc:id="8e8f1b65-bde1-49d2-9551-e82793fdf81f" name="getTasksById" />
+        <flow-ref doc:name="mainTaskById" doc:id="8e8f1b65-bde1-49d2-9551-e82793fdf81f" name="mainTaskById" />
     </flow>
     <flow name="get:\user\(ID):v2-config">
         <flow-ref doc:name="getUserById" doc:id="7af263e6-c1d4-419d-9f08-c36b0f172360" name="getUserById" />
     </flow>
     <flow name="post:\module:application\json:v2-config">
-        <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
-            <ee:message>
-                <ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-{
-  message: "Record(s) added successfully"
-}]]></ee:set-payload>
-            </ee:message>
-        </ee:transform>
+		<flow-ref doc:name="createNewModule" doc:id="1ccba059-9caf-4742-a67f-1786c0ab5e31" name="createNewModule"/>
     </flow>
     <flow name="post:\moduleprojectmap:application\json:v2-config">
-        <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
-            <ee:message>
-                <ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-{
-  message: "Record(s) added successfully"
-}]]></ee:set-payload>
-            </ee:message>
-        </ee:transform>
+		<flow-ref doc:name="createNewModuleProjectMap" doc:id="6f9775d2-b8f7-4a6c-b3c8-b6c8302452b2" name="createNewModuleProjectMap"/>
     </flow>
     <flow name="post:\priority:application\json:v2-config">
-        <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
-            <ee:message>
-                <ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-{
-  message: "Record(s) added successfully"
-}]]></ee:set-payload>
-            </ee:message>
-        </ee:transform>
+		<flow-ref doc:name="createNewPriority" doc:id="23f85ce0-07d8-4bff-9611-816815d9b0e4" name="createNewPriority"/>
     </flow>
     <flow name="post:\priorityprojectmap:application\json:v2-config">
-        <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
-            <ee:message>
-                <ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-{
-  message: "Record(s) added successfully"
-}]]></ee:set-payload>
-            </ee:message>
-        </ee:transform>
+		<flow-ref doc:name="createNewPriorityProjectMap" doc:id="c1a2c32c-8a87-40a2-b0c7-dccb14fb260d" name="createNewPriorityProjectMap"/>
     </flow>
     <flow name="post:\project:application\json:v2-config">
         <flow-ref doc:name="createNewProject" doc:id="54b22bd8-56b3-4f64-852d-5464b3cf254d" name="createNewProject" />
     </flow>
     <flow name="post:\role:application\json:v2-config">
-        <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
-            <ee:message>
-                <ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-{
-  message: "Record(s) added successfully"
-}]]></ee:set-payload>
-            </ee:message>
-        </ee:transform>
+		<flow-ref doc:name="createNewRole" doc:id="5c59b062-3bb6-49fc-8d01-7ab0cc005bcc" name="createNewRole"/>
     </flow>
     <flow name="post:\task:application\json:v2-config">
-        <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
-            <ee:message>
-                <ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-{
-  message: "Record(s) added successfully"
-}]]></ee:set-payload>
-            </ee:message>
-        </ee:transform>
+		<flow-ref doc:name="createNewTask" doc:id="ca16664f-3791-4f01-84b1-c0e79ae4d648" name="createNewTask"/>
     </flow>
     <flow name="post:\type:application\json:v2-config">
-        <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
-            <ee:message>
-                <ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-{
-  message: "Record(s) added successfully"
-}]]></ee:set-payload>
-            </ee:message>
-        </ee:transform>
+		<flow-ref doc:name="createNewType" doc:id="59b09766-0382-48f1-8098-94c72a38d881" name="createNewType"/>
     </flow>
     <flow name="post:\typeprojectmap:application\json:v2-config">
-        <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
-            <ee:message>
-                <ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-{
-  message: "Record(s) added successfully"
-}]]></ee:set-payload>
-            </ee:message>
-        </ee:transform>
+		<flow-ref doc:name="createNewTypeProjectMap" doc:id="3aa485af-8ee0-4e9d-8f3b-875b65eadf54" name="createNewTypeProjectMap"/>
     </flow>
     <flow name="post:\user:application\json:v2-config">
-        <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
-            <ee:message>
-                <ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-{
-  message: "Failed to add record(s)"
-}]]></ee:set-payload>
-            </ee:message>
-        </ee:transform>
+		<flow-ref doc:name="createNewUser" doc:id="6b0c1bc4-356c-4292-812b-867def6f73f9" name="createNewUser"/>
     </flow>
     <flow name="post:\userprojectmap:application\json:v2-config">
-        <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
-            <ee:message>
-                <ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-{
-  message: "Record(s) added successfully"
-}]]></ee:set-payload>
-            </ee:message>
-        </ee:transform>
+		<flow-ref doc:name="createNewUserProjectMap" doc:id="77f62ab3-7b4f-4ea2-8b30-6b3c6bc57f78" name="createNewUserProjectMap"/>
     </flow>
 </mule>

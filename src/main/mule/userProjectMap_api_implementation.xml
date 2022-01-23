@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
-	xmlns="http://www.mulesoft.org/schema/mule/core"
-	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
-http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
 	<flow name="createNewUserProjectMap" doc:id="953c0990-a66d-4ad6-912f-32d663ec3c03" >
 		<ee:transform doc:name="Prepare payload" doc:id="8601a3ba-6f28-43bc-b004-84fd4601f324" >
 			<ee:message >
@@ -24,5 +25,27 @@ output application/json
 	"projectid" : vars.backup_payload.projectId
 }]]]></db:input-parameters>
 		</db:insert>
+	</flow>
+	<flow name="updateUserProjectMapFlow" doc:id="b4f84bfc-b1bc-4aa1-975c-41f9ba6f772e" >
+		<ee:transform doc:name="Prepare Payload" doc:id="1f1f01f0-4487-443c-aeec-f8628ee26dc1" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"userId" : payload.userId,
+	"oldProjectId" : payload.oldProjectId,
+	"newProjectId" : payload.newProjectId
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<db:update doc:name="Update" doc:id="cb5478d1-a06d-4c6a-8d6d-4cefd49c7dbb" config-ref="rdbms_master_db_config">
+					<db:sql><![CDATA[UPDATE user_project_map SET "ProjectId" = :newprojectid WHERE "UserId" = :userid AND "ProjectId" = :oldprojectid]]></db:sql>
+					<db:input-parameters><![CDATA[#[{
+	"userid" : payload.userId,
+	"oldprojectid" : payload.oldProjectId,
+	"newprojectid" : payload.newProjectId
+}]]]></db:input-parameters>
+				</db:update>
 	</flow>
 </mule>

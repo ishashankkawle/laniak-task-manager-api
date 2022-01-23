@@ -59,10 +59,20 @@ payload]]></ee:set-payload>
 		</ee:transform>
 	</flow>
 	<flow name="getTasksById" doc:id="815a9fb6-0ea8-41c1-8161-2a21d6eec916" >
+		<ee:transform doc:name="Transform Message" doc:id="298297f5-8a6e-4bb5-970c-9050e75fceb9" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"taskId": if( attributes.uriParams.taskId? ) attributes.uriParams.taskId? else vars.backup_payload.taskId
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
 		<db:select doc:name="Select" doc:id="c37117f2-d757-4d68-988f-d7431125a5b3" config-ref="rdbms_master_db_config">
 			<reconnect />
 			<db:sql ><![CDATA[SELECT * FROM view_taskmaster AS ms WHERE ms."TaskId" = :taskId]]></db:sql>
-			<db:input-parameters ><![CDATA[#[{'taskId' : attributes.uriParams.ID}]]]></db:input-parameters>
+			<db:input-parameters ><![CDATA[#[{'taskId' : payload.taskId}]]]></db:input-parameters>
 		</db:select>
 		<ee:transform doc:name="Transform Message" doc:id="d459ae3a-bf80-4e2e-895f-171b83cf8243" >
 			<ee:message >
@@ -82,6 +92,58 @@ output application/java
 payload.id]]></ee:set-variable>
 			</ee:variables>
 		</ee:transform>
+	</flow>
+	<flow name="getTaskActivity" doc:id="b1039552-2f34-46ca-89fd-e0c76303833d">
+		<ee:transform doc:name="Transform Message" doc:id="47d4d7c5-08c3-4bfb-a577-798ef89408f2">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"taskId" : payload.taskId
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<mongo:find-documents doc:name="Find documents" doc:id="e984de39-c227-429e-8ccf-ac68b1b54230" config-ref="MongoDB_Config" collectionName="ETMHistoryCollection" fields=",">
+			<mongo:query><![CDATA[#[payload]]]></mongo:query>
+		</mongo:find-documents>
+		<ee:transform doc:name="Transform Message" doc:id="5248b928-c28d-4c5c-9bb6-d2fedf43c2e5">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload[0]]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="getTaskByIdWithActivity" doc:id="36dd90b7-165a-45be-9d74-d8b0652b5f55" >
+		<set-variable value="#[attributes.queryParams]" doc:name="Set Variable" doc:id="91e42af4-95e5-4266-a051-1cbe1b3a67f6" variableName="backup_payload"/>
+		<scatter-gather doc:name="Scatter-Gather" doc:id="5f6b025f-f9fa-4b71-8127-71dccc08263c" >
+			<route >
+				<flow-ref doc:name="getTasksById" doc:id="dc8adf47-eff2-4d21-bd5b-ca14787e26db" name="getTasksById"/>
+			</route>
+			<route >
+				<flow-ref doc:name="getTaskActivity" doc:id="973ca20c-21ed-4a05-a6ee-9d3412dcb63c" name="getTaskActivity"/>
+			</route>
+		</scatter-gather>
+		<ee:transform doc:name="Transform Message" doc:id="5459bf62-037b-49eb-9dc8-0d3edf3a4256" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="mainTaskById" doc:id="5de62e94-37c1-4f3f-8b0f-b574ac7d675c" >
+		<choice doc:name="Choice" doc:id="71bdbe19-801c-47cc-b734-27aed0e10ca1" >
+			<when expression='#[attributes.queryParams.activity == "false"]'>
+				<flow-ref doc:name="getTasksById" doc:id="d5a224a1-e6d0-483d-995d-46aaa993de9a" name="getTasksById"/>
+			</when>
+			<otherwise >
+				<flow-ref doc:name="getTaskByIdWithActivity" doc:id="1ab276d4-e5f0-45a0-b8cc-1ca4057cbfca" name="getTaskByIdWithActivity"/>
+			</otherwise>
+		</choice>
 	</flow>
 	<flow name="getUserBasedTaskSummary" doc:id="07b65bd5-bda9-49e4-aeb7-9630e4598ad2" >
 		<scatter-gather doc:name="Scatter-Gather" doc:id="7a731926-11e0-4a47-9a82-9678bb4ff802" >
@@ -407,29 +469,87 @@ payload]]></ee:set-payload>
 			</mongo:insert-document>
 		</try>
 	</flow>
-	<flow name="task_api_implementationFlow" doc:id="b1039552-2f34-46ca-89fd-e0c76303833d" >
-		<http:listener doc:name="Listener" doc:id="2f9d3c3f-b1c8-43b4-8a39-37acb77e5027" config-ref="v2-httpListenerConfig" path="/tmp"/>
-		<ee:transform doc:name="Transform Message" doc:id="47d4d7c5-08c3-4bfb-a577-798ef89408f2" >
-			<ee:message >
-				<ee:set-payload ><![CDATA[%dw 2.0
+	<sub-flow name="updateTaskFields" doc:id="957e19ea-0bc4-4882-87f0-1ece9ded32f2" >
+		<ee:transform doc:name="Transform Message" doc:id="f0109c26-8d2a-4d7d-8fb0-c327ae881917">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
 output application/json
 ---
 {
-	"TaskId" : "317"
+	taskId : payload.taskId,
+	field: payload.field,
+	fieldValue: payload.fieldValue
 }]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
-		<mongo:find-documents doc:name="Find documents" doc:id="e984de39-c227-429e-8ccf-ac68b1b54230" config-ref="MongoDB_Config" collectionName="ETMHistoryCollection" fields=",">
-			<mongo:query ><![CDATA[#[payload]]]></mongo:query>
-		</mongo:find-documents>
-		<ee:transform doc:name="Transform Message" doc:id="5248b928-c28d-4c5c-9bb6-d2fedf43c2e5" >
-			<ee:message >
-				<ee:set-payload ><![CDATA[%dw 2.0
+		<set-variable value="#[%dw 2.0&#10;output application/json&#10;---&#10;&quot;UPDATE task_master SET \&quot;&quot; ++ payload.field ++ &quot;\&quot; = '&quot; ++ payload.fieldValue ++ &quot;' WHERE \&quot;TaskId\&quot; = '&quot; ++ payload.taskId ++ &quot;'&quot;]" doc:name="Set Variable" doc:id="423c548b-7af3-426a-a282-a53d1304733c" variableName="query" />
+		<db:update doc:name="Task_Master Update" doc:id="a8d3145c-d694-49d9-87dc-d006f3ce2fa4" config-ref="rdbms_master_db_config">
+			<db:sql><![CDATA[#[vars.query]]]></db:sql>
+		</db:update>
+		<ee:transform doc:name="Transform Message" doc:id="71a25e32-85c4-4510-b09c-80e4dbeb2cb8">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
 output application/json
 ---
 payload]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
+	</sub-flow>
+	<sub-flow name="updateTaskActivity" doc:id="c98b9487-d6a3-49b6-a5f5-dd4d0cb96c76" >
+		<set-variable value="#[payload]" doc:name="Set Variable" doc:id="6af9742b-e06f-43c7-93c6-ef72293d9731" variableName="incomingData" />
+		<flow-ref doc:name="getTaskActivity" doc:id="fb7e22b2-da1a-490b-997c-8a897ad71595" name="getTaskActivity" />
+		<ee:transform doc:name="Transform Message" doc:id="a7711fbd-b318-410c-8f20-91c3096e62b7">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+
+var arrData = payload.activity << vars.incomingData
+---
+{
+	query: {"taskId" : payload.taskId},
+	updateObj: {activity: arrData}
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<mongo:update-documents doc:name="Update documents" doc:id="7e0e3466-754d-49a0-9b9a-bc827f00083a" config-ref="MongoDB_Config" collectionName="ETMHistoryCollection" >
+			<mongo:query ><![CDATA[#[payload.query]]]></mongo:query>
+			<mongo:content-to-update ><![CDATA[#[payload.updateObj]]]></mongo:content-to-update>
+		</mongo:update-documents>
+	</sub-flow>
+	<flow name="mainUpdateTaskFlow" doc:id="ee5e16f7-9420-4971-ac05-d3c69faf21fc" >
+		<set-variable value="#[payload]" doc:name="Set backup_payload" doc:id="55740c98-7a69-4c40-b397-38c6447da31a" variableName="backup_payload"/>
+		<set-variable value='#[%dw 2.0&#10;import * from dw::core::Strings&#10;output application/json&#10;---&#10;"SELECT \"" ++ capitalize(vars.backup_payload.field) ++ "\" as dataValue FROM task_master WHERE \"TaskId\" = " ++ vars.backup_payload.taskId]' doc:name="Set oldDataQuery" doc:id="d5da3918-a66b-49f0-b74d-f53126eb81d2" variableName="oldDataQuery" />
+		<db:select doc:name="Select" doc:id="9fd7ca94-39f9-4b02-9aa1-9b962bd421a6" config-ref="rdbms_master_db_config" target="oldData" targetValue="#[payload[0].datavalue]">
+			<db:sql ><![CDATA[#[vars.oldDataQuery]]]></db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="5b6824f3-fc3a-42a4-b850-2262d03f64fd">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+vars.backup_payload]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+		<flow-ref doc:name="updateTaskFields" doc:id="f84156d2-c460-465f-8085-82288bfe82cd" name="updateTaskFields" />
+		<ee:transform doc:name="Transform Message" doc:id="7cca9d3c-0df2-4866-b8ec-b661d1983abc">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	taskId: vars.backup_payload.taskId,
+	username: vars.backup_payload.userName,
+	userId: vars.backup_payload.userId,
+	dateUpdated: now(),
+	updateType: vars.backup_payload.field,
+	update: {
+		oldValue: vars.oldData,		
+		newValue: vars.backup_payload.fieldValue
+	}
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+		<flow-ref doc:name="updateTaskActivity" doc:id="f345f54d-dee1-4473-bc81-ee760691ad40" name="updateTaskActivity" />
 	</flow>
 	
 </mule>
