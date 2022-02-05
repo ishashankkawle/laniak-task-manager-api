@@ -67,4 +67,46 @@ vars.backup_payload]]></ee:set-payload>
 			<flow-ref doc:name="createNewPriorityProjectMap" doc:id="1e59404e-adaa-484a-92fb-3f422050e9ce" name="createNewPriorityProjectMap" />
 		</try>
 	</flow>
+	<flow name="deletePriorityFlow" doc:id="87b10aa1-a974-451c-911c-b596bab73d57" >
+		<set-variable value="#[payload]" doc:name="Set backup_payload" doc:id="4b3c6c3f-c9e4-4675-8a1e-11e1fa87e266" variableName="backup_payload" />
+		<db:select doc:name="Select" doc:id="908bd6bd-c152-4525-8987-009cfa702232" config-ref="rdbms_master_db_config" >
+			<db:sql ><![CDATA[SELECT COUNT(*) FROM 
+(SELECT * FROM task_master tm JOIN priority_master mm ON (tm."Priority" = mm."Priority") )temp
+WHERE temp."PriorityId" = :priorityid]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	"priorityid" : vars.backup_payload.priorityId
+}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="554cfa36-958e-4409-97de-9beb2fb31ed0" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload[0]]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<choice doc:name="Choice" doc:id="3ef38e5a-1f3f-4cdc-8ccd-bcd84a0b6cec" >
+			<when expression="#[payload.count == 0]" >
+				<db:delete doc:name="Delete" doc:id="30c9d722-98ca-4300-8600-7b4117a07f41" config-ref="rdbms_master_db_config" >
+					<db:sql ><![CDATA[DELETE FROM priority_master WHERE "PriorityId" = :priorityid;
+DELETE FROM priority_project_map WHERE "PriorityId" = :priorityid;]]></db:sql>
+					<db:input-parameters ><![CDATA[#[{
+	priorityid : vars.backup_payload.priorityId
+}]]]></db:input-parameters>
+				</db:delete>
+			</when>
+			<otherwise >
+				<ee:transform doc:name="Transform Message" doc:id="0da36a69-478a-4725-9a30-d94c190da481" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message" : "Cannot delete priority as some tasks are assigned with specified priority.Please Complete / Delete / Update tasks to New priority and try again"
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</otherwise>
+		</choice>
+	</flow>
 </mule>

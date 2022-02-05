@@ -67,4 +67,46 @@ vars.backup_payload]]></ee:set-payload>
 			<flow-ref doc:name="createNewModuleProjectMap" doc:id="c4d10218-34ac-44ed-9854-9831fdbbb5b3" name="createNewModuleProjectMap" />
 		</try>
 	</flow>
+	<flow name="deleteModuleFlow" doc:id="05b0d7db-67fa-4fa7-b082-6bf183f55e66" >
+		<set-variable value="#[payload]" doc:name="Set backup_payload" doc:id="16e853b3-5d44-4e86-9ba7-e3061aab79fd" variableName="backup_payload" />
+		<db:select doc:name="Select" doc:id="f92a8871-2101-4b40-96a4-d2c04b86b14e" config-ref="rdbms_master_db_config">
+			<db:sql ><![CDATA[SELECT COUNT(*) FROM 
+(SELECT * FROM task_master tm JOIN module_master mm ON (tm."Module" = mm."Module") )temp
+WHERE temp."ModuleId" = :moduleid]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	"moduleid" : vars.backup_payload.moduleId
+}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="f83ac12e-5e8c-4109-92bb-666a384cd937" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload[0]]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<choice doc:name="Choice" doc:id="38ec8aa2-9372-4e7b-892a-f280f88f6321" >
+			<when expression="#[payload.count == 0]">
+				<db:delete doc:name="Delete" doc:id="c4177d2e-7980-4ea3-a258-b1101bce65a9" config-ref="rdbms_master_db_config">
+					<db:sql ><![CDATA[DELETE FROM module_master WHERE "ModuleId" = :moduleid;
+DELETE FROM module_project_map WHERE "ModuleId" = :moduleid;]]></db:sql>
+					<db:input-parameters ><![CDATA[#[{
+	moduleid : vars.backup_payload.moduleId
+}]]]></db:input-parameters>
+				</db:delete>
+			</when>
+			<otherwise >
+				<ee:transform doc:name="Transform Message" doc:id="6d82925f-31b4-456f-b56c-a9441dcd41fc" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message" : "Cannot delete module as some tasks are assigned with specified module.Please Complete / Delete / Update tasks to New module and try again"
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</otherwise>
+		</choice>
+	</flow>
 </mule>

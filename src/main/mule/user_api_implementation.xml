@@ -217,4 +217,44 @@ vars.backup_payload]]></ee:set-payload>
 			</otherwise>
 		</choice>
 	</flow>
+	<flow name="deleteUserFlow" doc:id="f2267506-724b-44f9-b8c0-9c3f4f957eef" >
+		<set-variable value="#[payload]" doc:name="Set backup_payload" doc:id="bfcd262e-79bf-407b-8903-7792b7f8fd8f" variableName="backup_payload" />
+		<db:select doc:name="Select" doc:id="1b71383a-41ad-425e-b193-a565f9f0bfbc" config-ref="rdbms_master_db_config">
+			<db:sql ><![CDATA[SELECT COUNT(*) FROM task_master WHERE "OWNER" = :userid]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	"userid" : vars.backup_payload.userId
+}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="aae641ee-fc6f-4fdc-a3d1-825ba1940f9e" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload[0]]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<choice doc:name="Choice" doc:id="f2a1c206-8f12-4dff-945a-4b6cb54a8a4a" >
+			<when expression="#[payload.count == 0]">
+				<db:delete doc:name="Delete" doc:id="599ade28-1905-41b6-bd10-62732f22b496" config-ref="rdbms_master_db_config">
+					<db:sql ><![CDATA[DELETE FROM user_project_map WHERE "UserId" = :userid;
+DELETE FROM user_master WHERE "UserId" = :userid;]]></db:sql>
+					<db:input-parameters ><![CDATA[#[{
+	"userid" : vars.backup_payload.userId
+}]]]></db:input-parameters>
+				</db:delete>
+			</when>
+			<otherwise >
+				<ee:transform doc:name="Transform Message" doc:id="c29517d8-95e6-414a-8477-6842c4eacadf" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message" : "Some tasks are assigned to specified user. Hence cannot be deleted"
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</otherwise>
+		</choice>
+	</flow>
 </mule>

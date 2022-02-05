@@ -67,4 +67,46 @@ vars.backup_payload]]></ee:set-payload>
 			<flow-ref doc:name="createNewTypeProjectMap" doc:id="df38c4f8-533b-408d-adea-86c2fb5828c1" name="createNewTypeProjectMap" />
 		</try>
 	</flow>
+	<flow name="deleteTypeFlow" doc:id="9119af08-2076-403b-b1fc-15280e425ffc" >
+		<set-variable value="#[payload]" doc:name="Set backup_payload" doc:id="d9a3daea-dea7-4257-a947-71bfe9e87c91" variableName="backup_payload" />
+		<db:select doc:name="Select" doc:id="09714e70-322a-474b-9392-59a27e1d1595" config-ref="rdbms_master_db_config" >
+			<db:sql ><![CDATA[SELECT COUNT(*) FROM 
+(SELECT * FROM task_master tm JOIN type_master mm ON (tm."Type" = mm."Type") )temp
+WHERE temp."TypeId" = :typeid]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	"typeid" : vars.backup_payload.typeId
+}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="353464c4-2d9a-4441-a709-0f488dc754a8" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload[0]]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<choice doc:name="Choice" doc:id="ffd02843-5010-453d-8757-b14e7665a236" >
+			<when expression="#[payload.count == 0]" >
+				<db:delete doc:name="Delete" doc:id="464c329e-2b7e-45ea-a163-4edf4bc6bf13" config-ref="rdbms_master_db_config" >
+					<db:sql ><![CDATA[DELETE FROM type_master WHERE "TypeId" = :typeid;
+DELETE FROM type_project_map WHERE "TypeId" = :typeid;]]></db:sql>
+					<db:input-parameters ><![CDATA[#[{
+	typeid : vars.backup_payload.typeId
+}]]]></db:input-parameters>
+				</db:delete>
+			</when>
+			<otherwise >
+				<ee:transform doc:name="Transform Message" doc:id="b37a8332-8f6f-483c-b28a-b15e6014c28b" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message" : "Cannot delete type as some tasks are assigned with specified type.Please Complete / Delete / Update tasks to New type and try again"
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</otherwise>
+		</choice>
+	</flow>
 </mule>

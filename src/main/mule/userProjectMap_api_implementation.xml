@@ -48,4 +48,47 @@ output application/json
 }]]]></db:input-parameters>
 				</db:update>
 	</flow>
+	<flow name="deleteUserProjectMapFlow" doc:id="a0e86a55-4999-4a3d-a75e-f19a06cc57ef" >
+		<set-variable value="#[payload]" doc:name="Set Variable" doc:id="85a0d485-c036-4bab-82d5-3e3765f28e0b" variableName="backup_payload"/>
+		<db:select doc:name="Select" doc:id="727e5e17-8a42-4e26-9b97-ae05b8cfb27b" config-ref="rdbms_master_db_config">
+			<db:sql ><![CDATA[SELECT COUNT(*) FROM user_project_map WHERE "UserId" = :userid AND "ProjectId" <> :projectid
+
+]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	"userid" : vars.backup_payload.userId,
+	"projectid" : vars.backup_payload.projectId
+}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="c488003c-f1ac-49ef-8260-e7a119d7b32c" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload[0]]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<choice doc:name="Choice" doc:id="bf6acd14-b498-4fbb-97ed-e06e42bf37fd" >
+			<when expression="#[payload.count &gt; 0]">
+				<db:delete doc:name="Delete" doc:id="82399576-f3ee-4b74-a29a-8bb137961d48" config-ref="rdbms_master_db_config">
+					<db:sql ><![CDATA[DELETE FROM user_project_map WHERE "UserId" = :userid AND "ProjectId" = :projectid]]></db:sql>
+					<db:input-parameters ><![CDATA[#[{
+	"userid" : vars.backup_payload.userId,
+	"projectid" : vars.backup_payload.projectId
+}]]]></db:input-parameters>
+				</db:delete>
+			</when>
+			<otherwise >
+				<ee:transform doc:name="Transform Message" doc:id="a1d7dda5-e64f-45a9-98a2-94ef9600cab4" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message" : "Please map specified to any other project before deleting current mapping"
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</otherwise>
+		</choice>
+	</flow>
 </mule>

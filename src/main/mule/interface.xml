@@ -136,100 +136,28 @@ output application/json
 		<flow-ref doc:name="updateUserFlow" doc:id="102631bb-1fd4-4ad0-af26-447ec8bfff76" name="updateUserFlow"/>
     </flow>
     <flow name="delete:\module:application\json:v2-config">
-        <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
-            <ee:message>
-                <ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-{
-  message: "Record(s) deleted successfully"
-}]]></ee:set-payload>
-            </ee:message>
-        </ee:transform>
+        <flow-ref doc:name="deleteModuleFlow" doc:id="2b05dfed-4b3d-4ddb-aec0-d133a66578e8" name="deleteModuleFlow"/>
     </flow>
     <flow name="delete:\priority:application\json:v2-config">
-        <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
-            <ee:message>
-                <ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-{
-  message: "Record(s) deleted successfully"
-}]]></ee:set-payload>
-            </ee:message>
-        </ee:transform>
+		<flow-ref doc:name="deletePriorityFlow" doc:id="cae5782e-e5cb-412b-bc3d-7fc7022b0549" name="deletePriorityFlow"/>
     </flow>
     <flow name="delete:\project:application\json:v2-config">
-        <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
-            <ee:message>
-                <ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-{
-  message: "Record(s) deleted successfully"
-}]]></ee:set-payload>
-            </ee:message>
-        </ee:transform>
+		<flow-ref doc:name="deleteProjectFlow" doc:id="666f6d54-bacc-4051-af7c-0f42b00e336b" name="deleteProjectFlow"/>
     </flow>
     <flow name="delete:\role:application\json:v2-config">
-        <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
-            <ee:message>
-                <ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-{
-  message: "Record(s) deleted successfully"
-}]]></ee:set-payload>
-            </ee:message>
-        </ee:transform>
+		<flow-ref doc:name="deleteRoleFlow" doc:id="5b1712d6-a0d5-4d19-a818-8d0ee24448b8" name="deleteRoleFlow"/>
     </flow>
     <flow name="delete:\task:application\json:v2-config">
-        <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
-            <ee:message>
-                <ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-{
-  message: "Record(s) deleted successfully"
-}]]></ee:set-payload>
-            </ee:message>
-        </ee:transform>
+		<flow-ref doc:name="deleteTaskFlow" doc:id="a05f357c-b7ee-4b48-b636-c4b418415e7b" name="deleteTaskFlow"/>
     </flow>
     <flow name="delete:\type:application\json:v2-config">
-        <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
-            <ee:message>
-                <ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-{
-  message: "Record(s) deleted successfully"
-}]]></ee:set-payload>
-            </ee:message>
-        </ee:transform>
+        <flow-ref doc:name="deleteTypeFlow" doc:id="bb03b483-1084-4c28-9a1f-cb76e6dd3988" name="deleteTypeFlow"/>
     </flow>
     <flow name="delete:\user:application\json:v2-config">
-        <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
-            <ee:message>
-                <ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-{
-  message: "Record(s) deleted successfully"
-}]]></ee:set-payload>
-            </ee:message>
-        </ee:transform>
+		<flow-ref doc:name="deleteUserFlow" doc:id="dc1eaccf-2c87-4255-b863-9b17b8099c47" name="deleteUserFlow"/>
     </flow>
     <flow name="delete:\userprojectmap:application\json:v2-config">
-        <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
-            <ee:message>
-                <ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-{
-  message: "Record(s) deleted successfully"
-}]]></ee:set-payload>
-            </ee:message>
-        </ee:transform>
+		<flow-ref doc:name="deleteUserProjectMapFlow" doc:id="9949dc5e-34c2-4042-b23b-0985b4c4511b" name="deleteUserProjectMapFlow"/>
     </flow>
     <flow name="get:\task\verification\commit:v2-config">
         <flow-ref doc:name="getVerificationCommits" doc:id="a255e4a5-c70f-4875-8ea1-91387241907a" name="getVerificationCommits" />

@@ -126,4 +126,107 @@ vars.backup_payload]]></ee:set-payload>
 			<flow-ref doc:name="createNewUserProjectMap" doc:id="b6157fce-dfb7-488a-bf68-9ce6886fb149" name="createNewUserProjectMap"/>
 		</try>
 	</flow>
+	<flow name="deleteProjectFlow" doc:id="0a662d38-d80b-485f-b85c-f1a456b31c9e" >
+		<set-variable value="#[payload]" doc:name="Set backup_payload_proj" doc:id="abae5ae1-1fea-4aff-869e-55409538af90" variableName="backup_payload_proj" />
+		<db:select doc:name="Select" doc:id="a9d8233c-0ba3-4141-92d0-df414e8e33a0" config-ref="rdbms_master_db_config">
+			<db:sql ><![CDATA[SELECT "TaskId" from task_master WHERE "ProjectId" = :projectid]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	"projectid" : vars.backup_payload_proj.projectId
+}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="574ba25e-7a2e-4fba-8eb3-69209d5a393a" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload map($.TaskId)]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<foreach doc:name="For Each" doc:id="f3c9cc4f-7376-44f6-877b-773f77865b6c" >
+			<ee:transform doc:name="Transform Message" doc:id="e8e73ef1-0fe4-40f3-a385-bc098f25e9ab" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"ID" : payload
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+			<try doc:name="Try" doc:id="9a5e01fe-4842-45dc-99cf-9b03fd30370d" transactionalAction="ALWAYS_BEGIN">
+				<flow-ref doc:name="deleteTaskFlow" doc:id="18d93b8c-42b7-42a1-840e-7ad82fe972a4" name="deleteTaskFlow"/>
+			</try>
+		</foreach>
+		<scatter-gather doc:name="Scatter-Gather" doc:id="df1953ad-54c8-4bb6-a99f-7151c08d4200" >
+			<route >
+				<db:select doc:name="Select" doc:id="cfc48c2d-785e-4d15-9607-45f0437eaab1" config-ref="rdbms_master_db_config">
+					<db:sql ><![CDATA[SELECT "ModuleId" FROM module_project_map WHERE "ProjectId" = :projectid]]></db:sql>
+					<db:input-parameters ><![CDATA[#[{
+	"projectid" : vars.backup_payload_proj.projectId
+}]]]></db:input-parameters>
+				</db:select>
+				<ee:transform doc:name="Transform Message" doc:id="85946c7c-fe8b-4d23-b487-463d12165fb4" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<db:bulk-delete doc:name="Bulk delete" doc:id="78d6bafe-8f76-442b-8169-78523c3e9972" config-ref="rdbms_master_db_config">
+					<db:sql ><![CDATA[DELETE FROM module_project_map WHERE "ModuleId" = :ModuleId;
+DELETE FROM module_master WHERE "ModuleId" = :ModuleId;]]></db:sql>
+				</db:bulk-delete>
+			</route>
+			<route >
+				<db:select doc:name="Select" doc:id="203ef1eb-2acd-4d9d-87f4-1d949daa0713" config-ref="rdbms_master_db_config">
+					<db:sql><![CDATA[SELECT "TypeId" FROM type_project_map WHERE "ProjectId" = :projectid]]></db:sql>
+					<db:input-parameters><![CDATA[#[{
+	"projectid" : vars.backup_payload_proj.projectId
+}]]]></db:input-parameters>
+				</db:select>
+				<ee:transform doc:name="Transform Message" doc:id="dde3c01c-8604-4fd0-8f3c-80bd88eda791" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<db:bulk-delete doc:name="Bulk delete" doc:id="9defb71d-d438-41b4-bd23-88fbd897ade6" config-ref="rdbms_master_db_config" >
+					<db:sql ><![CDATA[DELETE FROM type_project_map WHERE "TypeId" = :TypeId;
+DELETE FROM type_master WHERE "TypeId" = :TypeId;]]></db:sql>
+				</db:bulk-delete>
+			</route>
+			<route >
+				<db:select doc:name="Select" doc:id="1c10268c-499d-4844-b7cf-524a21ce74ca" config-ref="rdbms_master_db_config">
+					<db:sql><![CDATA[SELECT "PriorityId" FROM priority_project_map WHERE "ProjectId" = :projectid]]></db:sql>
+					<db:input-parameters><![CDATA[#[{
+	"projectid" : vars.backup_payload_proj.projectId
+}]]]></db:input-parameters>
+				</db:select>
+				<ee:transform doc:name="Transform Message" doc:id="5f3c169b-571b-4342-81ae-2f77340f7bb2" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<db:bulk-delete doc:name="Bulk delete" doc:id="9bf06ff9-4f6a-4360-b753-49d8ad67479a" config-ref="rdbms_master_db_config" >
+					<db:sql ><![CDATA[DELETE FROM priority_project_map WHERE "PriorityId" = :PriorityId;
+DELETE FROM priority_master WHERE "PriorityId" = :PriorityId;]]></db:sql>
+				</db:bulk-delete>
+			</route>
+			<route >
+				<db:delete doc:name="Delete" doc:id="dd470825-defe-41ca-86cb-a71b39651557" config-ref="rdbms_master_db_config">
+					<db:sql ><![CDATA[DELETE FROM user_project_map WHERE "ProjectId" = :projectid;
+DELETE FROM project_master WHERE "ProjectId" = :projectid;]]></db:sql>
+					<db:input-parameters ><![CDATA[#[{
+	"projectid" : vars.backup_payload_proj.projectId
+}]]]></db:input-parameters>
+				</db:delete>
+			</route>
+		</scatter-gather>
+	</flow>
 </mule>

@@ -551,5 +551,51 @@ output application/json
 			</ee:transform>
 		<flow-ref doc:name="updateTaskActivity" doc:id="f345f54d-dee1-4473-bc81-ee760691ad40" name="updateTaskActivity" />
 	</flow>
+	<flow name="deleteTaskFlow" doc:id="9d9b0b93-2c93-49f8-8ec8-be62295d4641" >
+		<set-variable value="#[payload]" doc:name="Set backup_payload" doc:id="454fa9ef-ae56-4970-bea0-865c6e7a397b" variableName="backup_payload"/>
+		<db:select doc:name="Select" doc:id="5a53a3f4-af5a-40b6-be4b-72b0ce13e97a" config-ref="rdbms_master_db_config">
+			<db:sql ><![CDATA[SELECT COUNT(*) FROM task_master WHERE "TaskId" = :taskid AND "TaskStatus" IN ('Complete' , 'Delete')]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	"taskid" : vars.backup_payload.ID
+}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="93f65212-2b91-44de-8597-5fda973aa42f" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<choice doc:name="Choice" doc:id="2240e4e1-2bbc-4319-976f-709551424a06" >
+			<when expression="#[payload.count != 0]">
+				<try doc:name="Try" doc:id="24e61e34-36b3-4f5f-8f2e-4a1a890de450" transactionalAction="ALWAYS_BEGIN">
+					<db:delete doc:name="Delete" doc:id="19c80756-5c3d-422d-8d42-1fd5318fdf4b" config-ref="rdbms_master_db_config">
+					<db:sql><![CDATA[DELETE FROM task_master WHERE "TaskId" = :taskid]]></db:sql>
+					<db:input-parameters><![CDATA[#[{
+	"taskid" : vars.backup_payload.ID
+}]]]></db:input-parameters>
+				</db:delete>
+					<mongo:remove-documents doc:name="Remove documents" doc:id="92f2fb7b-b2a6-4c80-b375-2c2d6643dfb5" config-ref="MongoDB_Config" collectionName="ETMHistoryCollection">
+						<mongo:query ><![CDATA[#[{
+	"taskId" : vars.backup_payload.ID
+}]]]></mongo:query>
+					</mongo:remove-documents>
+				</try>
+			</when>
+			<otherwise >
+				<ee:transform doc:name="Transform Message" doc:id="984c5107-0667-4fe3-8dd9-815f1142c028" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message" : "Task not found"
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</otherwise>
+		</choice>
+	</flow>
 	
 </mule>

@@ -87,7 +87,6 @@ payload]]></ee:set-payload>
 		</try>
 	</flow>
 	<flow name="updateRoleFlow" doc:id="b24d008d-800c-4dae-9323-6b96a240098e" >
-		<http:listener doc:name="Listener" doc:id="e2864b97-bce9-420e-8ab6-c0a4781f44eb" config-ref="v2-httpListenerConfig" path="/tmp2"/>
 		<ee:transform doc:name="Transform Message" doc:id="86f41625-dd4c-4c7a-9092-08423830f827" >
 			<ee:message >
 				<ee:set-payload ><![CDATA[%dw 2.0
@@ -105,5 +104,44 @@ output application/json
 			<db:sql ><![CDATA[#[payload]]]></db:sql>
 		</db:update>
 		<logger level="INFO" doc:name="Logger" doc:id="72e13ebc-91a4-47d9-824e-c0251430914a" message="#[payload]"/>
+	</flow>
+	<flow name="deleteRoleFlow" doc:id="8d8b2d37-23de-436b-a200-7a2b05df99be" >
+		<set-variable value="#[payload]" doc:name="Set backup_payload" doc:id="bc286c27-7108-42e7-95e2-04f5a273deee" variableName="backup_payload"/>
+		<db:select doc:name="Select" doc:id="6f7e0413-a7cb-444e-81c9-2088c9db3a52" config-ref="rdbms_master_db_config">
+			<db:sql ><![CDATA[SELECT COUNT(*) FROM user_master WHERE "RoleId" = :roleid]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	"roleid" : vars.backup_payload.roleId
+}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="ed3ade8c-8cc8-4083-b652-2afd51b99337" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload[0]]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<choice doc:name="Choice" doc:id="d64ee9bd-3a74-4f55-8dee-330dffcd9409" >
+			<when expression="#[payload.count == 0]">
+				<db:delete doc:name="Delete" doc:id="a51ea8ad-b7ad-403b-b577-911c93b90af7" config-ref="rdbms_master_db_config">
+					<db:sql ><![CDATA[DELETE FROM role_master WHERE "RoleId" = :roleid]]></db:sql>
+					<db:input-parameters ><![CDATA[#[{
+	"roleid" : vars.backup_payload.roleId
+}]]]></db:input-parameters>
+				</db:delete>
+			</when>
+			<otherwise >
+				<ee:transform doc:name="Transform Message" doc:id="df2cbd2a-e160-4179-9876-a47c57cf0c81" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message" : "Failed to remove role as some users are associated with Role. Please change ROles of associated users and try again"
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</otherwise>
+		</choice>
 	</flow>
 </mule>
