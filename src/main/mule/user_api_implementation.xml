@@ -47,12 +47,12 @@ output application/json
 ---
 {
 	roleId: payload.RoleId[0],
-	query : "SELECT \"USerId\" , \"Name\" , \"RoleId\" , \"RoleName\" FROM view_userprojectmap WHERE \"UserId\" <> '" ++ vars.attributes.queryParams.userId ++ "' "
+	query : "SELECT DISTINCT \"UserId\" , \"Name\" , \"RoleId\" , \"RoleName\" FROM view_userprojectmap WHERE \"UserId\" <> '" ++ vars.attributes.userId ++ "' "
 }]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
 		<choice doc:name="Project Filter" doc:id="c203cb75-aeab-435d-88d9-32444cd8f474" >
-			<when expression='#[vars.attributes.projectFilter == "same Project"]'>
+			<when expression='#[vars.attributes.projectFilter == "same"]'>
 				<ee:transform doc:name="Add same project filter" doc:id="3de987ca-8fd7-4752-b14c-67f82c7c018e" >
 					<ee:message >
 						<ee:set-payload ><![CDATA[%dw 2.0
@@ -65,7 +65,7 @@ payload ++
 					</ee:message>
 				</ee:transform>
 			</when>
-			<when expression='#[vars.attributes.projectFilter == "other Projects"]'>
+			<when expression='#[vars.attributes.projectFilter == "other"]'>
 				<ee:transform doc:name="Add other project filter" doc:id="9593848f-815c-4015-a99b-85f3a60df705" >
 					<ee:message >
 						<ee:set-payload ><![CDATA[%dw 2.0
@@ -90,19 +90,19 @@ payload ++
 output application/json
 ---
 {
-	query : payload.query ++ "and \"RoleId\" < '" ++ payload.roleId ++"' "
+	query : payload.query ++ "and \"RoleId\" > '" ++ payload.roleId ++"' "
 }]]></ee:set-payload>
 					</ee:message>
 				</ee:transform>
 			</when>
-			<when expression='#[vars.attributes.roleFilter == "smaller And Equal"]'>
+			<when expression='#[vars.attributes.roleFilter == "smaller_and_equal"]'>
 				<ee:transform doc:name="Add small or equal role filter" doc:id="c243070f-efaf-4faf-855a-41578c01877e" >
 					<ee:message >
 						<ee:set-payload ><![CDATA[%dw 2.0
 output application/json
 ---
 {
-	query : payload.query ++ "and \"RoleId\" <= '" ++ payload.roleId ++"' "
+	query : payload.query ++ "and \"RoleId\" >= '" ++ payload.roleId ++"' "
 }]]></ee:set-payload>
 					</ee:message>
 				</ee:transform>
@@ -114,19 +114,19 @@ output application/json
 output application/json
 ---
 {
-	query : payload.query ++ "and \"RoleId\" > '" ++ payload.roleId ++"' "
+	query : payload.query ++ "and \"RoleId\" < '" ++ payload.roleId ++"' "
 }]]></ee:set-payload>
 					</ee:message>
 				</ee:transform>
 			</when>
-			<when expression='#[vars.attributes.roleFilter == "bigger And Equal"]'>
+			<when expression='#[vars.attributes.roleFilter == "bigger_and_equal"]'>
 				<ee:transform doc:name="Add big or equal role filter" doc:id="4f29a2dc-aec0-4e2f-a1c5-6c178a640a96" >
 					<ee:message >
 						<ee:set-payload ><![CDATA[%dw 2.0
 output application/json
 ---
 {
-	query : payload.query ++ "and \"RoleId\" >= '" ++ payload.roleId ++"' "
+	query : payload.query ++ "and \"RoleId\" <= '" ++ payload.roleId ++"' "
 }]]></ee:set-payload>
 					</ee:message>
 				</ee:transform>
@@ -144,7 +144,7 @@ output application/json
 				</ee:transform>
 			</otherwise>
 		</choice>
-		<logger level="INFO" doc:name="Logger" doc:id="a8404f6c-f0e6-4354-a192-90de41f0ea04" message='#["LAN -----&gt; User Data fetch query :: " + payload.query]'/>
+		<logger level="INFO" doc:name="Logger" doc:id="a8404f6c-f0e6-4354-a192-90de41f0ea04" message='#["LAN -----&gt; User Data fetch query :: " ++ payload.query]'/>
 		<db:select doc:name="Select" doc:id="b8c40449-301a-4a92-bbf4-b8abb404899e" config-ref="rdbms_master_db_config">
 			<db:sql ><![CDATA[#[payload.query]]]></db:sql>
 		</db:select>
@@ -195,6 +195,15 @@ vars.backup_payload]]></ee:set-payload>
 			</ee:transform>
 			<flow-ref doc:name="createNewUserProjectMap" doc:id="b9475733-75ae-4a37-93c2-d47ae349aab4" name="createNewUserProjectMap" />
 		</try>
+		<ee:transform doc:name="Transform Message" doc:id="29ee63ce-8d43-4a9f-8d6f-7b300add7d18" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
 	</flow>
 	<flow name="updateUserFlow" doc:id="b82856be-e7fe-4880-8127-9a8ae6b4daad" >
 		<set-variable value="#[payload]" doc:name="Set backup_payload" doc:id="50e9f124-a946-4a3d-870c-af6110005bf4" variableName="backup_payload" />

@@ -125,6 +125,14 @@ vars.backup_payload]]></ee:set-payload>
 			</ee:transform>
 			<flow-ref doc:name="createNewUserProjectMap" doc:id="b6157fce-dfb7-488a-bf68-9ce6886fb149" name="createNewUserProjectMap"/>
 		</try>
+		<ee:transform doc:name="Transform Message" doc:id="256d645f-c4a4-48c7-a0f7-2f52f383291a" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
 	</flow>
 	<flow name="deleteProjectFlow" doc:id="0a662d38-d80b-485f-b85c-f1a456b31c9e" >
 		<set-variable value="#[payload]" doc:name="Set backup_payload_proj" doc:id="abae5ae1-1fea-4aff-869e-55409538af90" variableName="backup_payload_proj" />
@@ -228,5 +236,13 @@ DELETE FROM project_master WHERE "ProjectId" = :projectid;]]></db:sql>
 				</db:delete>
 			</route>
 		</scatter-gather>
+		<ee:transform doc:name="Transform Message" doc:id="0b187c8a-50af-46c9-ae85-844098b65668" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
 	</flow>
 </mule>

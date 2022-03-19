@@ -40,7 +40,7 @@ payload]]></ee:set-payload>
 				<flow-ref doc:name="Flow Reference" doc:id="eea099e4-c80e-4b56-88d2-74881d3e660e" name="getTypeIdFromName"/>
 			</when>
 			<otherwise >
-				<flow-ref doc:name="Flow Reference" doc:id="00a18bbe-5085-47f9-b19b-6482bad16000" name="getPrioritiesFromProject"/>
+				<flow-ref doc:name="getTypesFromProject" doc:id="00a18bbe-5085-47f9-b19b-6482bad16000" name="getTypesFromProject"/>
 			</otherwise>
 		</choice>
 	</flow>
@@ -66,6 +66,15 @@ vars.backup_payload]]></ee:set-payload>
 			</ee:transform>
 			<flow-ref doc:name="createNewTypeProjectMap" doc:id="df38c4f8-533b-408d-adea-86c2fb5828c1" name="createNewTypeProjectMap" />
 		</try>
+		<ee:transform doc:name="Transform Message" doc:id="9e07d2e3-71d4-48d5-9e83-6d6048c1e2e6" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
 	</flow>
 	<flow name="deleteTypeFlow" doc:id="9119af08-2076-403b-b1fc-15280e425ffc" >
 		<set-variable value="#[payload]" doc:name="Set backup_payload" doc:id="d9a3daea-dea7-4257-a947-71bfe9e87c91" variableName="backup_payload" />

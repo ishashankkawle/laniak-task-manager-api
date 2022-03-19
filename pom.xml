@@ -13,7 +13,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-		<app.runtime>4.3.0-20210719</app.runtime>
+		<app.runtime>4.4.0</app.runtime>
 		<mule.maven.plugin.version>3.5.2</mule.maven.plugin.version>
 	</properties>
 
@@ -83,7 +83,7 @@
 		<dependency>
 			<groupId>46e89148-259e-4ae9-b06b-bde1fcd96d21</groupId>
 			<artifactId>v2</artifactId>
-			<version>1.0.4</version>
+			<version>1.0.7</version>
 			<classifier>raml</classifier>
 			<type>zip</type>
 		</dependency>

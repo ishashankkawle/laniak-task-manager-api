@@ -37,10 +37,10 @@ payload]]></ee:set-payload>
 	<flow name="mainPriorityFlow" doc:id="b1bd3ae3-732f-4da4-9086-ffe5e050c822" >
 		<choice doc:name="Choice" doc:id="7db9a8db-9abd-46b5-9f35-2c9f71bd45a7" >
 			<when expression="#[attributes.queryParams.name != null]">
-				<flow-ref doc:name="Flow Reference" doc:id="eea099e4-c80e-4b56-88d2-74881d3e660e" name="getPriorityIdFromName"/>
+				<flow-ref doc:name="getPriorityIdFromName" doc:id="eea099e4-c80e-4b56-88d2-74881d3e660e" name="getPriorityIdFromName"/>
 			</when>
 			<otherwise >
-				<flow-ref doc:name="Flow Reference" doc:id="00a18bbe-5085-47f9-b19b-6482bad16000" name="getPrioritiesFromProject"/>
+				<flow-ref doc:name="getPrioritiesFromProject" doc:id="00a18bbe-5085-47f9-b19b-6482bad16000" name="getPrioritiesFromProject"/>
 			</otherwise>
 		</choice>
 	</flow>
@@ -66,6 +66,15 @@ vars.backup_payload]]></ee:set-payload>
 			</ee:transform>
 			<flow-ref doc:name="createNewPriorityProjectMap" doc:id="1e59404e-adaa-484a-92fb-3f422050e9ce" name="createNewPriorityProjectMap" />
 		</try>
+		<ee:transform doc:name="Transform Message" doc:id="690d79f8-f6b4-43df-88b8-9b9240b644e0" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
 	</flow>
 	<flow name="deletePriorityFlow" doc:id="87b10aa1-a974-451c-911c-b596bab73d57" >
 		<set-variable value="#[payload]" doc:name="Set backup_payload" doc:id="4b3c6c3f-c9e4-4675-8a1e-11e1fa87e266" variableName="backup_payload" />

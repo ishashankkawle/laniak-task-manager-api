@@ -244,7 +244,7 @@ output application/json
 		</ee:transform>
 	</flow>
 	<flow name="getDetailedTaskSummary" doc:id="ee2ea5c9-3712-4d4f-ae46-580660590048">
-		<db:select doc:name="Select" doc:id="c39ca9c7-16f6-4387-879d-0b11f574b0bf">
+		<db:select doc:name="Select" doc:id="c39ca9c7-16f6-4387-879d-0b11f574b0bf" config-ref="rdbms_master_db_config">
 			<db:sql><![CDATA[SELECT "TaskStatus" , count(0) FROM view_taskmaster GROUP BY "TaskStatus"]]></db:sql>
 		</db:select>
 		<ee:transform doc:name="Transform Message" doc:id="f811fee2-39cf-4a63-81ae-cfd2ceac8f8e">
@@ -271,12 +271,7 @@ output application/json
 				<ee:set-payload><![CDATA[%dw 2.0
 output application/json
 ---
-{
-	totalCount: vars.totalCount as String,
-	activeCount: vars.activeCount as String,
-	completedCount: vars.completedCount as String,
-	moduleData: vars.module
-}]]></ee:set-payload>
+payload]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
 	</flow>
@@ -453,7 +448,7 @@ payload]]></ee:set-payload>
 				<db:input-parameters ><![CDATA[#[{
 	"taskid" : vars.backup_payload.taskId,
 	"projectid" : vars.backup_payload.projectId,
-	"moduleid" : vars.backup_payload.moduleId,
+	"moduleid" : vars.backup_payload.module,
 	"title" : vars.backup_payload.title,
 	"description" : vars.backup_payload.description,
 	"dateterminated" : vars.backup_payload.dateTerminated,
@@ -465,7 +460,7 @@ payload]]></ee:set-payload>
 }]]]></db:input-parameters>
 			</db:insert>
 			<mongo:insert-document doc:name="Activity Insert" doc:id="cef59240-0a77-49d6-a50c-ed0a25725f1d" config-ref="MongoDB_Config" collectionName="ETMHistoryCollection">
-				<mongo:document ><![CDATA[#[vars.backup_payload default {} ++ {"activity" : []}]]]></mongo:document>
+				<mongo:document ><![CDATA[#[{"taskId" : vars.backup_payload.taskId} ++ {"activity" : []}]]]></mongo:document>
 			</mongo:insert-document>
 		</try>
 	</flow>

@@ -85,6 +85,15 @@ payload]]></ee:set-payload>
 }]]]></db:input-parameters>
 			</db:insert>
 		</try>
+		<ee:transform doc:name="Transform Message" doc:id="c8a00454-bc27-4a84-8abc-6b1666c16f3d" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
 	</flow>
 	<flow name="updateRoleFlow" doc:id="b24d008d-800c-4dae-9323-6b96a240098e" >
 		<ee:transform doc:name="Transform Message" doc:id="86f41625-dd4c-4c7a-9092-08423830f827" >

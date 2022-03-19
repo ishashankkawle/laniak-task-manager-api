@@ -3,7 +3,7 @@
     <http:listener-config name="v2-httpListenerConfig">
         <http:listener-connection host="0.0.0.0" port="8082" />
     </http:listener-config>
-    <apikit:config name="v2-config" api="resource::46e89148-259e-4ae9-b06b-bde1fcd96d21:v2:1.0.4:raml:zip:v2.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+    <apikit:config name="v2-config" api="resource::46e89148-259e-4ae9-b06b-bde1fcd96d21:v2:1.0.7:raml:zip:v2.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
     <flow name="v2-main">
         <http:listener config-ref="v2-httpListenerConfig" path="/api/*">
             <http:response statusCode="#[vars.httpStatus default 200]">
@@ -124,40 +124,40 @@ output application/json
         </error-handler>
     </flow>
     <flow name="put:\role:v2-config">
-		<flow-ref doc:name="updateRoleFlow" doc:id="886d5c73-03d4-440c-801c-409141b8da59" name="updateRoleFlow"/>
+        <flow-ref doc:name="updateRoleFlow" doc:id="886d5c73-03d4-440c-801c-409141b8da59" name="updateRoleFlow" />
     </flow>
     <flow name="put:\userprojectmap:application\json:v2-config">
-		<flow-ref doc:name="updateUserProjectMapFlow" doc:id="12b41224-d136-4805-bcac-ceb938143314" name="updateUserProjectMapFlow"/>
+        <flow-ref doc:name="updateUserProjectMapFlow" doc:id="12b41224-d136-4805-bcac-ceb938143314" name="updateUserProjectMapFlow" />
     </flow>
     <flow name="put:\task\(ID):application\json:v2-config">
-        <flow-ref doc:name="mainUpdateTaskFlow" doc:id="7f8bcb32-88a9-4b43-9fae-30f1f62e9a16" name="mainUpdateTaskFlow"/>
+        <flow-ref doc:name="mainUpdateTaskFlow" doc:id="7f8bcb32-88a9-4b43-9fae-30f1f62e9a16" name="mainUpdateTaskFlow" />
     </flow>
     <flow name="put:\user\(ID):application\json:v2-config">
-		<flow-ref doc:name="updateUserFlow" doc:id="102631bb-1fd4-4ad0-af26-447ec8bfff76" name="updateUserFlow"/>
+        <flow-ref doc:name="updateUserFlow" doc:id="102631bb-1fd4-4ad0-af26-447ec8bfff76" name="updateUserFlow" />
     </flow>
     <flow name="delete:\module:application\json:v2-config">
-        <flow-ref doc:name="deleteModuleFlow" doc:id="2b05dfed-4b3d-4ddb-aec0-d133a66578e8" name="deleteModuleFlow"/>
+        <flow-ref doc:name="deleteModuleFlow" doc:id="2b05dfed-4b3d-4ddb-aec0-d133a66578e8" name="deleteModuleFlow" />
     </flow>
     <flow name="delete:\priority:application\json:v2-config">
-		<flow-ref doc:name="deletePriorityFlow" doc:id="cae5782e-e5cb-412b-bc3d-7fc7022b0549" name="deletePriorityFlow"/>
+        <flow-ref doc:name="deletePriorityFlow" doc:id="cae5782e-e5cb-412b-bc3d-7fc7022b0549" name="deletePriorityFlow" />
     </flow>
     <flow name="delete:\project:application\json:v2-config">
-		<flow-ref doc:name="deleteProjectFlow" doc:id="666f6d54-bacc-4051-af7c-0f42b00e336b" name="deleteProjectFlow"/>
+        <flow-ref doc:name="deleteProjectFlow" doc:id="666f6d54-bacc-4051-af7c-0f42b00e336b" name="deleteProjectFlow" />
     </flow>
     <flow name="delete:\role:application\json:v2-config">
-		<flow-ref doc:name="deleteRoleFlow" doc:id="5b1712d6-a0d5-4d19-a818-8d0ee24448b8" name="deleteRoleFlow"/>
+        <flow-ref doc:name="deleteRoleFlow" doc:id="5b1712d6-a0d5-4d19-a818-8d0ee24448b8" name="deleteRoleFlow" />
     </flow>
     <flow name="delete:\task:application\json:v2-config">
-		<flow-ref doc:name="deleteTaskFlow" doc:id="a05f357c-b7ee-4b48-b636-c4b418415e7b" name="deleteTaskFlow"/>
+        <flow-ref doc:name="deleteTaskFlow" doc:id="a05f357c-b7ee-4b48-b636-c4b418415e7b" name="deleteTaskFlow" />
     </flow>
     <flow name="delete:\type:application\json:v2-config">
-        <flow-ref doc:name="deleteTypeFlow" doc:id="bb03b483-1084-4c28-9a1f-cb76e6dd3988" name="deleteTypeFlow"/>
+        <flow-ref doc:name="deleteTypeFlow" doc:id="bb03b483-1084-4c28-9a1f-cb76e6dd3988" name="deleteTypeFlow" />
     </flow>
     <flow name="delete:\user:application\json:v2-config">
-		<flow-ref doc:name="deleteUserFlow" doc:id="dc1eaccf-2c87-4255-b863-9b17b8099c47" name="deleteUserFlow"/>
+        <flow-ref doc:name="deleteUserFlow" doc:id="dc1eaccf-2c87-4255-b863-9b17b8099c47" name="deleteUserFlow" />
     </flow>
     <flow name="delete:\userprojectmap:application\json:v2-config">
-		<flow-ref doc:name="deleteUserProjectMapFlow" doc:id="9949dc5e-34c2-4042-b23b-0985b4c4511b" name="deleteUserProjectMapFlow"/>
+        <flow-ref doc:name="deleteUserProjectMapFlow" doc:id="9949dc5e-34c2-4042-b23b-0985b4c4511b" name="deleteUserProjectMapFlow" />
     </flow>
     <flow name="get:\task\verification\commit:v2-config">
         <flow-ref doc:name="getVerificationCommits" doc:id="a255e4a5-c70f-4875-8ea1-91387241907a" name="getVerificationCommits" />
@@ -172,7 +172,7 @@ output application/json
         <flow-ref doc:name="mainPriorityFlow" doc:id="02c2335e-f7da-4f19-817e-beca15546483" name="mainPriorityFlow" />
     </flow>
     <flow name="get:\project:v2-config">
-        <flow-ref doc:name="mainProjectFlow" doc:id="4e8beaa5-d04e-4aa5-8f81-a10cf01d36a4" name="mainPriorityFlow" />
+        <flow-ref doc:name="mainProjectFlow" doc:id="4e8beaa5-d04e-4aa5-8f81-a10cf01d36a4" name="mainProjectFlow" />
     </flow>
     <flow name="get:\task\rcs_util:v2-config">
         <flow-ref doc:name="mainTaskRCSUtilizationFlow" doc:id="23f6fcd7-6e92-4b82-b97a-f96bfaa91152" name="mainTaskRCSUtilizationFlow" />
@@ -208,36 +208,60 @@ output application/json
         <flow-ref doc:name="getUserById" doc:id="7af263e6-c1d4-419d-9f08-c36b0f172360" name="getUserById" />
     </flow>
     <flow name="post:\module:application\json:v2-config">
-		<flow-ref doc:name="createNewModule" doc:id="1ccba059-9caf-4742-a67f-1786c0ab5e31" name="createNewModule"/>
+        <flow-ref doc:name="createNewModule" doc:id="1ccba059-9caf-4742-a67f-1786c0ab5e31" name="createNewModule" />
     </flow>
     <flow name="post:\moduleprojectmap:application\json:v2-config">
-		<flow-ref doc:name="createNewModuleProjectMap" doc:id="6f9775d2-b8f7-4a6c-b3c8-b6c8302452b2" name="createNewModuleProjectMap"/>
+        <flow-ref doc:name="createNewModuleProjectMap" doc:id="6f9775d2-b8f7-4a6c-b3c8-b6c8302452b2" name="createNewModuleProjectMap" />
     </flow>
     <flow name="post:\priority:application\json:v2-config">
-		<flow-ref doc:name="createNewPriority" doc:id="23f85ce0-07d8-4bff-9611-816815d9b0e4" name="createNewPriority"/>
+        <flow-ref doc:name="createNewPriority" doc:id="23f85ce0-07d8-4bff-9611-816815d9b0e4" name="createNewPriority" />
     </flow>
     <flow name="post:\priorityprojectmap:application\json:v2-config">
-		<flow-ref doc:name="createNewPriorityProjectMap" doc:id="c1a2c32c-8a87-40a2-b0c7-dccb14fb260d" name="createNewPriorityProjectMap"/>
+        <flow-ref doc:name="createNewPriorityProjectMap" doc:id="c1a2c32c-8a87-40a2-b0c7-dccb14fb260d" name="createNewPriorityProjectMap" />
     </flow>
     <flow name="post:\project:application\json:v2-config">
         <flow-ref doc:name="createNewProject" doc:id="54b22bd8-56b3-4f64-852d-5464b3cf254d" name="createNewProject" />
     </flow>
     <flow name="post:\role:application\json:v2-config">
-		<flow-ref doc:name="createNewRole" doc:id="5c59b062-3bb6-49fc-8d01-7ab0cc005bcc" name="createNewRole"/>
+        <flow-ref doc:name="createNewRole" doc:id="5c59b062-3bb6-49fc-8d01-7ab0cc005bcc" name="createNewRole" />
     </flow>
     <flow name="post:\task:application\json:v2-config">
-		<flow-ref doc:name="createNewTask" doc:id="ca16664f-3791-4f01-84b1-c0e79ae4d648" name="createNewTask"/>
+        <flow-ref doc:name="createNewTask" doc:id="ca16664f-3791-4f01-84b1-c0e79ae4d648" name="createNewTask" />
     </flow>
     <flow name="post:\type:application\json:v2-config">
-		<flow-ref doc:name="createNewType" doc:id="59b09766-0382-48f1-8098-94c72a38d881" name="createNewType"/>
+        <flow-ref doc:name="createNewType" doc:id="59b09766-0382-48f1-8098-94c72a38d881" name="createNewType" />
     </flow>
     <flow name="post:\typeprojectmap:application\json:v2-config">
-		<flow-ref doc:name="createNewTypeProjectMap" doc:id="3aa485af-8ee0-4e9d-8f3b-875b65eadf54" name="createNewTypeProjectMap"/>
+        <flow-ref doc:name="createNewTypeProjectMap" doc:id="3aa485af-8ee0-4e9d-8f3b-875b65eadf54" name="createNewTypeProjectMap" />
     </flow>
     <flow name="post:\user:application\json:v2-config">
-		<flow-ref doc:name="createNewUser" doc:id="6b0c1bc4-356c-4292-812b-867def6f73f9" name="createNewUser"/>
+        <flow-ref doc:name="createNewUser" doc:id="6b0c1bc4-356c-4292-812b-867def6f73f9" name="createNewUser" />
     </flow>
     <flow name="post:\userprojectmap:application\json:v2-config">
-		<flow-ref doc:name="createNewUserProjectMap" doc:id="77f62ab3-7b4f-4ea2-8b30-6b3c6bc57f78" name="createNewUserProjectMap"/>
+        <flow-ref doc:name="createNewUserProjectMap" doc:id="77f62ab3-7b4f-4ea2-8b30-6b3c6bc57f78" name="createNewUserProjectMap" />
+    </flow>
+    <flow name="put:\role:application\json:v2-config">
+        <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  "Role updated Successfully": null
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+    </flow>
+    <flow name="put:\task\workflow:application\json:v2-config">
+        <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  message: "Record(s) updated successfully"
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
     </flow>
 </mule>
