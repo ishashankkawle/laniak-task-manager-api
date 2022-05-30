@@ -241,27 +241,9 @@ output application/json
         <flow-ref doc:name="createNewUserProjectMap" doc:id="77f62ab3-7b4f-4ea2-8b30-6b3c6bc57f78" name="createNewUserProjectMap" />
     </flow>
     <flow name="put:\role:application\json:v2-config">
-        <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
-            <ee:message>
-                <ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-{
-  "Role updated Successfully": null
-}]]></ee:set-payload>
-            </ee:message>
-        </ee:transform>
+        <flow-ref doc:name="updateRoleFlow" doc:id="c78f9c52-edd6-410c-968f-e54dd7441be0" name="updateRoleFlow"/>
     </flow>
     <flow name="put:\task\workflow:application\json:v2-config">
-        <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
-            <ee:message>
-                <ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-{
-  message: "Record(s) updated successfully"
-}]]></ee:set-payload>
-            </ee:message>
-        </ee:transform>
+        <flow-ref doc:name="mainTaskWorkflowUpdateFlow" doc:id="04895c28-28ac-4b43-9398-e90ecba1bfac" name="mainTaskWorkflowUpdateFlow"/>
     </flow>
 </mule>

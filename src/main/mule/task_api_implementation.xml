@@ -65,7 +65,7 @@ payload]]></ee:set-payload>
 output application/json
 ---
 {
-	"taskId": if( attributes.uriParams.taskId? ) attributes.uriParams.taskId? else vars.backup_payload.taskId
+	"taskId": if( attributes.uriParams.ID? ) attributes.uriParams.ID else vars.backup_payload.taskId
 }]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
@@ -94,13 +94,14 @@ payload.id]]></ee:set-variable>
 		</ee:transform>
 	</flow>
 	<flow name="getTaskActivity" doc:id="b1039552-2f34-46ca-89fd-e0c76303833d">
+		<set-variable value="#[output application/json&#10;---&#10;if( attributes.uriParams.ID? ) attributes.uriParams.ID as Number else payload.taskId as Number]" doc:name="Set Variable" doc:id="1bd227d3-7d24-4574-bef4-1250fcd909f0" variableName="taskId"/>
 		<ee:transform doc:name="Transform Message" doc:id="47d4d7c5-08c3-4bfb-a577-798ef89408f2">
 			<ee:message>
 				<ee:set-payload><![CDATA[%dw 2.0
 output application/json
 ---
 {
-	"taskId" : payload.taskId
+	"taskId" : vars.taskId as Number
 }]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
