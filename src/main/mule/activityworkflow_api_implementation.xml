@@ -39,16 +39,36 @@ output application/json
 		</ee:transform>
 		<flow-ref doc:name="updateTaskActivity" doc:id="46cb2ee9-5b99-43f7-8cf5-61a9878c0539" name="updateTaskActivity"/>
 	</flow>
-	<flow name="mainTaskWorkflowUpdateFlow" doc:id="646e2031-8e50-4390-996b-bb81c3f6a2cc" >
+	<flow name="updateTaskCommentActivity" doc:id="01af8808-9f1e-4a8e-b992-20adb0281691" >
+		<ee:transform doc:name="Transform Message" doc:id="d9e0e407-898c-4bb8-b552-fffa4f253c1f" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"taskId" : payload.taskId,
+	"userNameBy" : payload.userName,
+	"userId" : payload.userId,
+	"dateUpdated" : now(),
+	"updateType" : "comment",
+	"activityData" : payload.data,
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<flow-ref doc:name="updateTaskActivity" doc:id="dfd1e76b-923d-4355-bbac-c1f1990bc6a9" name="updateTaskActivity" />
+	</flow>
+	<flow name="mainTaskActivityWorkflowUpdateFlow" doc:id="646e2031-8e50-4390-996b-bb81c3f6a2cc" >
 		<set-variable value="#[payload]" doc:name="Set backup_payload" doc:id="2a94f404-83f1-48d8-9df6-a9c4b80b51dc" variableName="backup_payload"/>
-		<choice doc:name="Choice" doc:id="8666121e-53a2-4f5c-b81d-19072b9f6922" >
+		<choice doc:name="Choice" doc:id="abdc1e84-4558-44ba-b928-80b6539db4d0" >
+			<when expression='#[if (((typeOf(payload) ~= "Array") and (payload[0].updateType == "workflow")) or (payload.updateType == "workflow")) true else false]'>
+				<choice doc:name="Choice" doc:id="8666121e-53a2-4f5c-b81d-19072b9f6922">
 			<when expression='#[typeOf(payload) ~= "Array"]'>
-				<foreach doc:name="For Each" doc:id="b191c2f7-1147-4ecf-a255-2cad6d4f725b" >
-					<try doc:name="Try" doc:id="a27e4bea-de6e-4153-b94a-a84e3e3c96f6" transactionalAction="ALWAYS_BEGIN" >
+				<foreach doc:name="For Each" doc:id="b191c2f7-1147-4ecf-a255-2cad6d4f725b">
+					<try doc:name="Try" doc:id="a27e4bea-de6e-4153-b94a-a84e3e3c96f6" transactionalAction="ALWAYS_BEGIN">
 						<flow-ref doc:name="updateTaskWorkflowStatus" doc:id="e0020059-cb34-4fa3-abe0-55474709bb0d" name="updateTaskWorkflowStatus" />
-						<ee:transform doc:name="Transform Message" doc:id="bc1c5510-a2ef-4692-94f0-8a6e04d749f6" >
-							<ee:message >
-								<ee:set-payload ><![CDATA[%dw 2.0
+						<ee:transform doc:name="Transform Message" doc:id="bc1c5510-a2ef-4692-94f0-8a6e04d749f6">
+							<ee:message>
+								<ee:set-payload><![CDATA[%dw 2.0
 output application/json
 ---
 vars.backup_payload[vars.counter - 1]]]></ee:set-payload>
@@ -58,19 +78,24 @@ vars.backup_payload[vars.counter - 1]]]></ee:set-payload>
 					</try>
 				</foreach>
 			</when>
-			<otherwise >
+			<otherwise>
 				<try doc:name="Try" doc:id="7fa5597a-0a99-4e2f-8da1-9ab846f53a69" transactionalAction="ALWAYS_BEGIN">
 					<flow-ref doc:name="updateTaskWorkflowStatus" doc:id="86623f67-a374-44ca-954f-eabd2d729172" name="updateTaskWorkflowStatus" />
-					<ee:transform doc:name="Transform Message" doc:id="ef86aa51-3ca3-474e-90a0-c699fc38eda7" >
-						<ee:message >
-							<ee:set-payload ><![CDATA[%dw 2.0
+					<ee:transform doc:name="Transform Message" doc:id="ef86aa51-3ca3-474e-90a0-c699fc38eda7">
+						<ee:message>
+							<ee:set-payload><![CDATA[%dw 2.0
 output application/json
 ---
 vars.backup_payload]]></ee:set-payload>
 						</ee:message>
 					</ee:transform>
-					<flow-ref doc:name="updateTaskWorkflowActivity" doc:id="398f660e-09bc-4ef7-b834-6178fb4cc772" name="updateTaskWorkflowActivity"/>
+					<flow-ref doc:name="updateTaskWorkflowActivity" doc:id="398f660e-09bc-4ef7-b834-6178fb4cc772" name="updateTaskWorkflowActivity" />
 				</try>
+			</otherwise>
+		</choice>
+			</when>
+			<otherwise >
+				<flow-ref doc:name="updateTaskCommentActivity" doc:id="929b2cb6-f06a-4474-9f93-580654576b5b" name="updateTaskCommentActivity"/>
 			</otherwise>
 		</choice>
 	</flow>

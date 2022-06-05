@@ -3,7 +3,7 @@
     <http:listener-config name="v2-httpListenerConfig">
         <http:listener-connection host="0.0.0.0" port="8082" />
     </http:listener-config>
-    <apikit:config name="v2-config" api="resource::46e89148-259e-4ae9-b06b-bde1fcd96d21:v2:1.0.7:raml:zip:v2.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+    <apikit:config name="v2-config" api="resource::46e89148-259e-4ae9-b06b-bde1fcd96d21:v2:1.0.8:raml:zip:v2.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
     <flow name="v2-main">
         <http:listener config-ref="v2-httpListenerConfig" path="/api/*">
             <http:response statusCode="#[vars.httpStatus default 200]">
@@ -241,9 +241,9 @@ output application/json
         <flow-ref doc:name="createNewUserProjectMap" doc:id="77f62ab3-7b4f-4ea2-8b30-6b3c6bc57f78" name="createNewUserProjectMap" />
     </flow>
     <flow name="put:\role:application\json:v2-config">
-        <flow-ref doc:name="updateRoleFlow" doc:id="c78f9c52-edd6-410c-968f-e54dd7441be0" name="updateRoleFlow"/>
+        <flow-ref doc:name="updateRoleFlow" doc:id="c78f9c52-edd6-410c-968f-e54dd7441be0" name="updateRoleFlow" />
     </flow>
-    <flow name="put:\task\workflow:application\json:v2-config">
-        <flow-ref doc:name="mainTaskWorkflowUpdateFlow" doc:id="04895c28-28ac-4b43-9398-e90ecba1bfac" name="mainTaskWorkflowUpdateFlow"/>
+    <flow name="put:\task\activityworkflow:application\json:v2-config">
+		<flow-ref doc:name="mainTaskActivityWorkflowUpdateFlow" doc:id="04895c28-28ac-4b43-9398-e90ecba1bfac" name="mainTaskActivityWorkflowUpdateFlow" />
     </flow>
 </mule>
