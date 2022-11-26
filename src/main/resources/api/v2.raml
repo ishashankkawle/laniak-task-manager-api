@@ -1,0 +1,694 @@
+#%RAML 1.0
+title: V2
+
+types:
+  v_task_master: !include Model/v_task_master.raml
+  overview_summary: !include Model/overview_summary.raml
+  task_verification: !include Model/task_verification.raml
+  task_verification_comm_del: !include Model/task_verification_comm_del.raml
+  task_assignment_summary: !include Model/task_assignment_summary.raml
+  new_project: !include Model/new_project.raml
+  new_user: !include Model/new_user.raml
+  map_user_project: !include Model/map_user_project.raml
+  new_task: !include Model/new_task.raml
+  new_module: !include Model/new_module.raml
+  map_module_project: !include Model/map_module_project.raml
+  new_type: !include Model/new_type.raml
+  map_type_project: !include Model/map_type_project.raml
+  new_priority: !include Model/new_priority.raml
+  map_priority_project: !include Model/map_priority_project.raml
+  project_list: !include Model/project_list.raml
+  new_role: !include Model/new_role.raml
+  user_list: !include Model/user_list.raml
+  map_user_project_update: !include Model/map_user_project_update.raml
+  task_workflow_operation: !include Model/task_workflow_operation.raml
+
+  user_query1:
+    properties: 
+      email:
+       description: "Email to get UserId"
+       type: string
+       required: false
+       examples:
+        message: "userid@domain.com"
+  
+  user_query2:
+    properties:
+      userId:
+        required: false
+        description: Get user list. To be used along with projectId to get list of users from Same Project based on roleFilter condition
+        examples:
+          message: "U31"
+      projectId:
+        required: false
+        description: Get user list. To be used along with userId to get list of users from Same Project based on roleFilter condition
+        examples:
+          message: "12"
+      roleFilter:
+        required: false
+        description: Get filter on Role level
+        enum:
+            - small
+            - smaller_and_equal
+            - big
+            - bigger_and_equal
+            - equal
+      projectFilter:
+        required: false
+        description: Get filter on Project level  
+        enum:
+            - same
+            - other
+            - all
+    
+uses:
+  library: /exchange_modules/46e89148-259e-4ae9-b06b-bde1fcd96d21/generic_message_responses/1.0.1/generic_message_responses.raml
+  
+/project:
+  get:
+    description: Get all project list.
+    queryParameters:
+      name:
+        description: Project name to get project id
+        required: false
+        examples:
+          message: "project_name"
+      userId:
+        description: Get list of projects associated to userId
+        required: false
+        type: string
+        examples:
+          message: "1234"
+      otherUserId:
+        description: Get list of projects associated to userId and otherUserId. If you want to use this param, you should specify userId parameter as well.
+        required: false
+        type: string
+        examples:
+          message: "1234"
+    responses:
+      200:
+        body:
+          application/json:
+            examples:
+              message2: {ID : 123}
+              output: !include Sample Responses/project_list_example.raml
+                
+  post:
+    description: Create new project.
+    body:
+      application/json:
+        type: new_project
+        examples:
+          input: !include Sample Inputs/new_project_input.raml
+    responses:
+      201:
+        body:
+          application/json:
+            type: library.generic_msg_type
+            examples:
+              output: !include exchange_modules/46e89148-259e-4ae9-b06b-bde1fcd96d21/generic_message_responses/1.0.1/Sample Responses/record_add_success.raml
+
+  delete:
+    description: Delete project
+    body:
+      application/json:
+        example:
+          {projectId: "123"}
+    responses:
+      200:
+        body:
+          application/json:
+            type: library.generic_msg_type
+            examples:
+              output: !include exchange_modules/46e89148-259e-4ae9-b06b-bde1fcd96d21/generic_message_responses/1.0.1/Sample Responses/record_delete_success.raml
+
+/task:
+  get:
+    description: Get all tasks
+    queryParameters:
+      taskFilter:
+        description: Must be used along with filterParam option
+        required: false
+        enum:
+          - TaskAssigner
+          - Module
+          - TaskOwner
+          - Priority
+          - Type
+          - TaskStatus
+          - ProjectId
+      filterParam:
+        description: Parameter value for taskFilter
+        required: false
+        examples:
+          input: "value"
+    responses:
+      200:
+        body:
+          application/json:
+            type: v_task_master[]
+            examples:
+              output: !include Sample Responses/v_task_master_example.raml 
+  post:
+    description: Create new task
+    body:
+      application/json:
+        type: new_task
+        examples:
+          input: !include Sample Inputs/new_task_input.raml
+    responses:
+      201:
+        body:
+          application/json:
+            type: library.generic_msg_type
+            examples:
+              output: !include exchange_modules/46e89148-259e-4ae9-b06b-bde1fcd96d21/generic_message_responses/1.0.1/Sample Responses/record_add_success.raml
+  
+  ## PUT WILL UPDATE POSTGRESQL FIELDS ONLY FOR 1 OR MULTIPLE TASKS         
+  
+  # PUT will update Postgresql fields only for 1 or multiple tasks
+  delete:
+    description: Delete the task
+    body:
+      application/json:
+        examples:
+          message: {ID: "123"}
+    responses:
+      200:
+        body:
+          application/json:
+            type: library.generic_msg_type
+            examples:
+              output: !include exchange_modules/46e89148-259e-4ae9-b06b-bde1fcd96d21/generic_message_responses/1.0.1/Sample Responses/record_delete_success.raml    
+  
+  /summary:
+    get:
+      description: Get All task Summary
+      queryParameters:
+        userId: 
+          required: false
+        details:
+          required: true
+          enum:
+            - "true"
+            - "false"
+      responses:
+        200:
+          body:
+            application/json:
+              examples:
+                output1: !include Sample Responses/overview_summery_example.raml
+                output2: !include Sample Responses/task_assignment_summary_example.raml  
+
+  /verification:
+    description: Get all task with Self Commit / Self Delete status
+    get:
+      queryParameters:
+        userId:
+          required: false
+      responses:
+        200:
+          body:
+            application/json:
+              type: task_verification[]
+              examples:
+                output: !include  Sample Responses/task_verification_example.raml
+    /commit:
+      description: Get all task with Self Commit status
+      get:
+        queryParameters:
+          userId:
+            required: false
+        responses:
+          200:
+            body:
+              application/json:
+                type: task_verification_comm_del[]
+                examples:
+                  output: !include Sample Responses/task_verification_CommDel_example.raml
+
+    /delete:
+      description: Get all task with Self Commit status
+      get:
+        queryParameters:
+          userId:
+            required: false
+        responses:
+          200:
+            body:
+              application/json:
+                type: task_verification_comm_del[]
+                examples:
+                  output: !include Sample Responses/task_verification_CommDel_example.raml
+
+  /rcs_util:
+      description: Get resource Utilization count
+      get:
+        queryParameters:
+          userId:
+            required: false
+          summary:
+            required: false
+        responses:
+          200:
+            body:
+              application/json:
+                examples:
+                  output_summary_true: !include Sample Responses/task_assignment_rcs_utilization_summary_example.raml
+                  output_summary_false: !include Sample Responses/task_assignment_rcs_utilization_example.raml
+
+  /{ID}:
+    get:
+      description: Get single Task
+      queryParameters:
+        activity:
+          required: false
+          default: "false"
+      responses:
+        200:
+          body:
+            application/json:
+              examples: 
+                output1: !include Sample Responses/task.raml 
+                output2: !include Sample Responses/task_activity_example.raml 
+    put:
+      description: Update Task
+      body:
+        application/json:
+          example: !include Sample Inputs/update_task_input.raml
+      responses:
+        200:
+          body:
+            application/json:
+              example: !include exchange_modules/46e89148-259e-4ae9-b06b-bde1fcd96d21/generic_message_responses/1.0.1/Sample Responses/record_update_success.raml
+
+  /activityworkflow:
+    put:
+        description: Update workflow status of task
+        body:
+          multipart/form-data:
+          application/x-www-form-urlencoded:
+          application/json:
+            examples:
+              input1: !include Sample Inputs/task_workflow_operation_input.raml
+              input2: !include Sample Inputs/task_workflow_operation_multi_input.raml
+              input3: !include Sample Inputs/task_activity_operation_input.raml
+          
+        responses:
+          200:
+            body:
+              application/json:
+                type: library.generic_msg_type
+                examples:
+                  output: !include exchange_modules/46e89148-259e-4ae9-b06b-bde1fcd96d21/generic_message_responses/1.0.1/Sample Responses/record_update_success.raml
+
+/user:
+  get:
+    queryString:
+      type: user_query1 | user_query2
+    responses:
+      200:
+        body:
+          application/json:
+            examples:
+              output1: {userId: "U12" , userName: "User1" , roleId : "7" , roleName: "Software Engineer"}
+              output2: !include Sample Responses/user_list_example.raml
+  post:
+    description: Create new user.
+    body:
+      application/json:
+        type: new_user
+        examples:
+          input: !include Sample Inputs/new_user_input.raml
+    responses:
+      201:
+        body:
+          application/json:
+            type: library.generic_msg_type
+            examples:
+              output: !include exchange_modules/46e89148-259e-4ae9-b06b-bde1fcd96d21/generic_message_responses/1.0.1/Sample Responses/record_add_failure.raml
+  delete:
+    description: Delete User
+    body:
+      application/json:
+        example:
+          {userId: "U13"}
+    responses:
+      200:
+        body:
+          application/json:
+            type: library.generic_msg_type
+            examples:
+              output: !include exchange_modules/46e89148-259e-4ae9-b06b-bde1fcd96d21/generic_message_responses/1.0.1/Sample Responses/record_delete_success.raml
+  
+  /{ID}:
+    get:
+      queryParameters:
+        ID:
+          examples:
+            message: "12"
+      responses:
+        200:
+          body:
+            application/json:
+              examples:
+                message: {UserId : 123, RoleId : 10}
+    put:
+      description: Update User details
+      body:
+        application/json:
+          examples:
+            input: !include Sample Inputs/update_user_input.raml
+      responses:
+        203:
+          body:
+            application/json:
+              type: library.generic_msg_type
+              examples:
+                output: !include exchange_modules/46e89148-259e-4ae9-b06b-bde1fcd96d21/generic_message_responses/1.0.1/Sample Responses/record_update_success.raml
+
+/userprojectmap:
+  description: Create/Update/Delete User - Project Mapping
+  post:
+    body:
+      application/json:
+        type: map_user_project
+        examples:
+          input: !include Sample Inputs/map_user_project_input.raml
+    responses:
+      200:
+        body:
+          application/json:
+            type: library.generic_msg_type
+            examples:
+              output: !include exchange_modules/46e89148-259e-4ae9-b06b-bde1fcd96d21/generic_message_responses/1.0.1/Sample Responses/record_add_success.raml
+  put:
+    body:
+      application/json:
+        examples:
+          input: !include Sample Inputs/map_user_project_update_input.raml
+    responses:
+      200:
+        body:
+          application/json:
+            type: library.generic_msg_type
+            examples:
+              output: !include exchange_modules/46e89148-259e-4ae9-b06b-bde1fcd96d21/generic_message_responses/1.0.1/Sample Responses/record_update_success.raml
+  delete:
+    body:
+      application/json:
+        type: map_user_project
+        examples:
+          input: !include Sample Inputs/map_user_project_input.raml
+    responses:
+      200:
+        body:
+          application/json:
+            type: library.generic_msg_type
+            examples:
+              output: !include exchange_modules/46e89148-259e-4ae9-b06b-bde1fcd96d21/generic_message_responses/1.0.1/Sample Responses/record_delete_success.raml
+
+/module:
+  get:
+    queryParameters:
+      name:
+        description: module name to get moduleId
+        required: false
+        examples:
+          message: "module_name"
+      projectId:
+        description: get module list for projectId
+        required: false
+        examples:
+          message: "12"
+    responses:
+      200:
+        body:
+          application/json:
+            examples:
+              message1: {ID : 123}
+              message2: {key1 : "module1" , key2 : "module2"}
+  post:
+    description: Create new Module
+    body:
+      application/json:
+        type: new_module
+        examples:
+          input: !include Sample Inputs/new_module_input.raml
+    responses:
+      201:
+        body:
+          application/json:
+            type: library.generic_msg_type
+            examples:
+              output: !include exchange_modules/46e89148-259e-4ae9-b06b-bde1fcd96d21/generic_message_responses/1.0.1/Sample Responses/record_add_success.raml 
+  delete:
+    description: Delete module
+    body:
+      application/json:
+        example:
+          {moduleId: "U13"}
+    responses:
+      200:
+        body:
+          application/json:
+            type: library.generic_msg_type
+            examples:
+              output: !include exchange_modules/46e89148-259e-4ae9-b06b-bde1fcd96d21/generic_message_responses/1.0.1/Sample Responses/record_delete_success.raml
+
+/moduleprojectmap:
+  description: Create Module-Project Map
+  post:
+    body:
+      application/json:
+        type: map_module_project
+        examples:
+          input: !include Sample Inputs/map_module_project_input.raml
+    responses:
+      201:
+        body:
+          application/json:
+            type: library.generic_msg_type
+            examples:
+              output: !include exchange_modules/46e89148-259e-4ae9-b06b-bde1fcd96d21/generic_message_responses/1.0.1/Sample Responses/record_add_success.raml 
+
+/type:
+  get:
+    queryParameters:
+      name:
+        description: Get type ID for name
+        required: false
+        examples:
+          message: "type_name"
+      projectId:
+        description: Get all types for Project Id
+        required: false
+        examples:
+          message: "12"
+    responses:
+      200:
+        body:
+          application/json:
+            examples:
+              message1: {ID : 123}
+              message2: {key1: "type1" , key2: "type2"}
+  post:
+    description: Create new Type
+    body:
+      application/json:
+        type: new_type
+        examples:
+          input: !include Sample Inputs/new_type_input.raml
+    responses:
+      201:
+        body:
+          application/json:
+            type: library.generic_msg_type
+            examples:
+              output: !include exchange_modules/46e89148-259e-4ae9-b06b-bde1fcd96d21/generic_message_responses/1.0.1/Sample Responses/record_add_success.raml
+  delete:
+    description: Delete Type
+    body:
+      application/json:
+        example:
+          {typeId: "3"}
+    responses:
+      200:
+        body:
+          application/json:
+            type: library.generic_msg_type
+            examples:
+              output: !include exchange_modules/46e89148-259e-4ae9-b06b-bde1fcd96d21/generic_message_responses/1.0.1/Sample Responses/record_delete_success.raml
+
+/typeprojectmap:
+  description: Create Type - Project Mapping
+  post:
+    body:
+      application/json:
+        type: map_type_project
+        examples:
+          input: !include Sample Inputs/map_type_project_input.raml
+    responses:
+      201:
+        body:
+          application/json:
+            type: library.generic_msg_type
+            examples:
+              output: !include exchange_modules/46e89148-259e-4ae9-b06b-bde1fcd96d21/generic_message_responses/1.0.1/Sample Responses/record_add_success.raml
+
+/priority:
+  get:
+    queryParameters:
+      name:
+        description: Get priority name from priorityId
+        required: false
+        examples:
+          message: "priority_name"
+      projectId:
+        description: Get all Priorities from ProjectId
+        required: false
+        examples:
+          message: "12"
+    responses:
+      200:
+        body:
+          application/json:
+            examples:
+              message1: {ID : 123}
+              message2: {key1 : "Prio1" , key2: "Prio2"}
+  post:
+    description: Create New Priority
+    body:
+      application/json:
+        type: new_priority
+        examples:
+          input: !include Sample Inputs/new_priority_input.raml
+    responses:
+      201:
+        body:
+          application/json:
+            type: library.generic_msg_type
+            examples:
+              output: !include exchange_modules/46e89148-259e-4ae9-b06b-bde1fcd96d21/generic_message_responses/1.0.1/Sample Responses/record_add_success.raml
+  delete:
+    description: Delete Priority
+    body:
+      application/json:
+        example:
+          {priorityId: "13"}
+    responses:
+      200:
+        body:
+          application/json:
+            type: library.generic_msg_type
+            examples:
+              output: !include exchange_modules/46e89148-259e-4ae9-b06b-bde1fcd96d21/generic_message_responses/1.0.1/Sample Responses/record_delete_success.raml
+
+/priorityprojectmap:
+  description: Create Priority - Project Mapping
+  post:
+    body:
+      application/json:
+        type: map_priority_project
+        examples:
+          input: !include Sample Inputs/map_priority_project_input.raml
+    responses:
+      201:
+        body:
+          application/json:
+            type: library.generic_msg_type
+            examples:
+              output: !include exchange_modules/46e89148-259e-4ae9-b06b-bde1fcd96d21/generic_message_responses/1.0.1/Sample Responses/record_add_success.raml
+
+/role:
+  get:
+    description: Get all roles without any userId
+    queryParameters:
+      userId:
+        description: Get User Role Id from userId
+        required: false
+        examples:
+          message: "U23"
+    responses:
+      200:
+        body:
+          application/json:
+            examples:
+              message1: !include Sample Responses/role_list_example.raml
+              message2: {ID : 12 }
+  post:
+    description: Create New Role
+    body:
+      application/json:
+        type: new_role
+        examples:
+          input: !include Sample Inputs/new_role_input.raml
+    responses:
+      201:
+        body:
+          application/json:
+            type: library.generic_msg_type
+            examples:
+              output: !include exchange_modules/46e89148-259e-4ae9-b06b-bde1fcd96d21/generic_message_responses/1.0.1/Sample Responses/record_add_success.raml
+  put:
+    description: Update role
+    body:
+      application/json:
+        examples:
+          input: !include Sample Inputs/update_role_input.raml
+    responses:
+      200:
+        body:
+          application/json:
+            examples:
+              message: "{Role updated Successfully}"
+  delete:
+    description: Delete Role
+    body:
+      application/json:
+        example:
+          {roleId: "13"}
+    responses:
+      200:
+        body:
+          application/json:
+            type: library.generic_msg_type
+            examples:
+              output: !include exchange_modules/46e89148-259e-4ae9-b06b-bde1fcd96d21/generic_message_responses/1.0.1/Sample Responses/record_delete_success.raml
+  /validlist:
+    get:
+      description: Get all roles between updater's role and user's role
+      queryParameters:
+        updaterroleid:
+          required: true
+          description: Updater Role Id
+          examples:
+            message: "5"
+        userroleid:
+          required: true
+          description: User Role Id
+          examples:
+            message: "10"
+      responses:
+        200:
+          body:
+            application/json:
+              examples:
+                message: {ROLES : roles}
+  /small:
+    get:
+      description: Get all roles smaller that user's role
+      queryParameters:
+        userroleid:
+            required: true
+            description: User Role Id
+            examples:
+              message: "U10"
+      responses:
+        200:
+          body:
+            application/json:
+              examples:
+                message: {ROLES : roles}
+    
+              

@@ -57,6 +57,26 @@ output application/json
 		</ee:transform>
 		<flow-ref doc:name="updateTaskActivity" doc:id="dfd1e76b-923d-4355-bbac-c1f1990bc6a9" name="updateTaskActivity" />
 	</flow>
+	<flow name="updateTaskAttachmentActivity" doc:id="162de245-0abf-4e2a-bc6c-09c94784a7fc" >
+		<ee:transform doc:name="Transform Message" doc:id="6028dccc-2a23-4223-88b8-cff90bf1c708">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"taskId" : payload.taskId,
+	"userNameBy" : payload.userName,
+	"userId" : payload.userId,
+	"dateUpdated" : now(),
+	"updateType" : "attachment",
+	"comment" : payload.commentData,
+	"fileName" : payload.fileName,
+	"url" : payload.url
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<flow-ref doc:name="updateTaskActivity" doc:id="77528de2-4cb0-42bb-aba3-d650f7431e49" name="updateTaskActivity" />
+	</flow>
 	<flow name="mainTaskActivityWorkflowUpdateFlow" doc:id="646e2031-8e50-4390-996b-bb81c3f6a2cc" >
 		<set-variable value="#[payload]" doc:name="Set backup_payload" doc:id="2a94f404-83f1-48d8-9df6-a9c4b80b51dc" variableName="backup_payload"/>
 		<choice doc:name="Choice" doc:id="abdc1e84-4558-44ba-b928-80b6539db4d0" >
@@ -93,6 +113,9 @@ vars.backup_payload]]></ee:set-payload>
 				</try>
 			</otherwise>
 		</choice>
+			</when>
+			<when expression='#[payload.updateType == "attachment"]'>
+				<flow-ref doc:name="updateTaskAttachmentActivity" doc:id="838777b6-3fd1-4d78-91cc-ecbca7151021" name="updateTaskAttachmentActivity" />
 			</when>
 			<otherwise >
 				<flow-ref doc:name="updateTaskCommentActivity" doc:id="929b2cb6-f06a-4474-9f93-580654576b5b" name="updateTaskCommentActivity"/>

@@ -1,0 +1,43 @@
+#%RAML 1.0 NamedExample
+value:
+
+    taskId: "12"
+    taskAssigner: "Assigner Name"
+    description: "Description"
+    dateCreated: "14-12-2021"
+    dateTerminated: "14-12-2021"
+    module: "Module"
+    order: "Order"
+    taskOwner: "U12"
+    priority: "High"
+    title: "Title"
+    type: "Bug"
+    taskStatus: "WIP"
+    assignerName: "Name"
+    ownerName: "Name"
+    projectId: "12"
+    project: "Project Name"
+    activity: 
+      -
+        userNameBy: "User1"
+        userId: "250"
+        dateUpdated: "9-9-2021"
+        updateType: "comment"
+        update:
+          activityData: "Added New Comment"
+      -
+        userNameBy: "Mandar"
+        userId: "250"
+        dateUpdated: "9-9-2021"
+        updateType: "workflow"
+        update:
+          prevWorkflowState: "New"
+          nextWorkflowState: "Self_Commit"
+      -
+        userNameBy: "Mandar"
+        userId: "250"
+        dateUpdated: "9-9-2021"
+        updateType: "type"
+        update:
+            oldValue: "Feature"
+            newValue: "Bug"

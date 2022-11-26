@@ -534,7 +534,7 @@ output application/json
 ---
 {
 	taskId: vars.backup_payload.taskId,
-	username: vars.backup_payload.userName,
+	userNameBy: vars.backup_payload.userName,
 	userId: vars.backup_payload.userId,
 	dateUpdated: now(),
 	updateType: vars.backup_payload.field,

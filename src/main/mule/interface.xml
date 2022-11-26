@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd  http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
-    
     <flow name="v2-main">
         <http:listener config-ref="v2-httpListenerConfig" path="/api/*">
             <http:response statusCode="#[vars.httpStatus default 200]">
@@ -241,6 +240,12 @@ output application/json
         <flow-ref doc:name="updateRoleFlow" doc:id="c78f9c52-edd6-410c-968f-e54dd7441be0" name="updateRoleFlow" />
     </flow>
     <flow name="put:\task\activityworkflow:application\json:v2-config">
-		<flow-ref doc:name="mainTaskActivityWorkflowUpdateFlow" doc:id="04895c28-28ac-4b43-9398-e90ecba1bfac" name="mainTaskActivityWorkflowUpdateFlow" />
+        <flow-ref doc:name="mainTaskActivityWorkflowUpdateFlow" doc:id="04895c28-28ac-4b43-9398-e90ecba1bfac" name="mainTaskActivityWorkflowUpdateFlow" />
+    </flow>
+    <flow name="put:\task\activityworkflow:application\x-www-form-urlencoded:v2-config">
+        <flow-ref doc:name="mainTaskActivityWorkflowUpdateFlow" doc:id="70cf1a33-6872-4f8d-9c50-39e52d775bac" name="mainTaskActivityWorkflowUpdateFlow" />
+    </flow>
+    <flow name="put:\task\activityworkflow:multipart\form-data:v2-config">
+        <flow-ref doc:name="mainTaskActivityWorkflowUpdateFlow" doc:id="b12e6334-02cf-4da1-8647-f824446231a4" name="mainTaskActivityWorkflowUpdateFlow" />
     </flow>
 </mule>
