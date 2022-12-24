@@ -1,5 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd  http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+    <flow name="interfaceFlow" doc:id="11d65100-306d-42e0-b79e-40171a79aa5d">
+        <scheduler doc:name="Scheduler" doc:id="27cb6ab8-3367-46b0-8872-44748fc1d54b">
+            <scheduling-strategy>
+                <fixed-frequency frequency="30" timeUnit="DAYS" />
+            </scheduling-strategy>
+        </scheduler>
+        <flow-ref doc:name="getAllCompletedTasks" doc:id="e788a0e0-012a-4644-828c-3242ad86f643" name="getAllCompletedTasks" />
+        <ee:transform doc:name="Transform Message" doc:id="0722ff9c-2818-4d48-9bcb-cfd19aad0a49">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload map ((item, index) -> {
+    ID : item.TaskId
+})]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+        <foreach doc:name="For Each" doc:id="0906c8e3-ab7d-4b5a-9b7a-0dea8ead315e">
+            <set-variable value="#[payload]" doc:name="Set currentId" doc:id="6d0e9f25-81ab-4b06-8c82-d0502f0ebd0c" variableName="currentId" />
+            <flow-ref doc:name="deleteTaskFlow" doc:id="54fc8be8-28fb-4f4c-b887-34cd95bce004" name="deleteTaskFlow" />
+            <logger level="INFO" doc:name="Logger" doc:id="8f1d2f81-2f99-4d7d-bc86-2e2cb32a37d0" message="#[&quot;Task with ID : &quot; ++ vars.currentId.ID as String ++ &quot; has been deleted&quot;]" />
+        </foreach>
+    </flow>
     <flow name="v2-main">
         <http:listener config-ref="v2-httpListenerConfig" path="/api/*">
             <http:response statusCode="#[vars.httpStatus default 200]">
@@ -247,5 +270,17 @@ output application/json
     </flow>
     <flow name="put:\task\activityworkflow:multipart\form-data:v2-config">
         <flow-ref doc:name="mainTaskActivityWorkflowUpdateFlow" doc:id="b12e6334-02cf-4da1-8647-f824446231a4" name="mainTaskActivityWorkflowUpdateFlow" />
+    </flow>
+    <flow name="delete:\sprint:application\json:v2-config">
+        <flow-ref doc:name="deleteSprintFlow" doc:id="8297173b-416b-49f1-bdf1-2642980d8168" name="deleteSprintFlow" />
+    </flow>
+    <flow name="get:\sprint:v2-config">
+        <flow-ref doc:name="mainSprintFlow" doc:id="10e95b84-931d-4f18-889e-c275b259e9e6" name="mainSprintFlow" />
+    </flow>
+    <flow name="post:\sprint:application\json:v2-config">
+        <flow-ref doc:name="createNewSprint" doc:id="182c50a7-4b6e-4f9d-aa4d-716f62fb4627" name="createNewSprint" />
+    </flow>
+    <flow name="post:\sprintprojectmap:application\json:v2-config">
+        <flow-ref doc:name="createNewSprintProjectMap" doc:id="4f52ee4f-fe53-486e-91b8-024755e9f379" name="createNewSprintProjectMap" />
     </flow>
 </mule>

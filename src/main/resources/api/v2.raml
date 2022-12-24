@@ -2,26 +2,26 @@
 title: V2
 
 types:
-  v_task_master: !include Model/v_task_master.raml
-  overview_summary: !include Model/overview_summary.raml
-  task_verification: !include Model/task_verification.raml
-  task_verification_comm_del: !include Model/task_verification_comm_del.raml
-  task_assignment_summary: !include Model/task_assignment_summary.raml
-  new_project: !include Model/new_project.raml
-  new_user: !include Model/new_user.raml
-  map_user_project: !include Model/map_user_project.raml
-  new_task: !include Model/new_task.raml
-  new_module: !include Model/new_module.raml
-  map_module_project: !include Model/map_module_project.raml
-  new_type: !include Model/new_type.raml
-  map_type_project: !include Model/map_type_project.raml
-  new_priority: !include Model/new_priority.raml
-  map_priority_project: !include Model/map_priority_project.raml
-  project_list: !include Model/project_list.raml
-  new_role: !include Model/new_role.raml
-  user_list: !include Model/user_list.raml
-  map_user_project_update: !include Model/map_user_project_update.raml
-  task_workflow_operation: !include Model/task_workflow_operation.raml
+  # v_task_master: !include Model/v_task_master.raml
+  # overview_summary: !include Model/overview_summary.raml
+  # task_verification: !include Model/task_verification.raml
+  # task_verification_comm_del: !include Model/task_verification_comm_del.raml
+  # task_assignment_summary: !include Model/task_assignment_summary.raml
+  # new_project: !include Model/new_project.raml
+  # new_user: !include Model/new_user.raml
+  # map_user_project: !include Model/map_user_project.raml
+  # new_task: !include Model/new_task.raml
+  # new_module: !include Model/new_module.raml
+  # map_module_project: !include Model/map_module_project.raml
+  # new_type: !include Model/new_type.raml
+  # map_type_project: !include Model/map_type_project.raml
+  # new_priority: !include Model/new_priority.raml
+  # map_priority_project: !include Model/map_priority_project.raml
+  # project_list: !include Model/project_list.raml
+  # new_role: !include Model/new_role.raml
+  # user_list: !include Model/user_list.raml
+  # map_user_project_update: !include Model/map_user_project_update.raml
+  # task_workflow_operation: !include Model/task_workflow_operation.raml
 
   user_query1:
     properties: 
@@ -97,14 +97,12 @@ uses:
     description: Create new project.
     body:
       application/json:
-        type: new_project
         examples:
           input: !include Sample Inputs/new_project_input.raml
     responses:
       201:
         body:
           application/json:
-            type: library.generic_msg_type
             examples:
               output: !include exchange_modules/46e89148-259e-4ae9-b06b-bde1fcd96d21/generic_message_responses/1.0.1/Sample Responses/record_add_success.raml
 
@@ -118,7 +116,6 @@ uses:
       200:
         body:
           application/json:
-            type: library.generic_msg_type
             examples:
               output: !include exchange_modules/46e89148-259e-4ae9-b06b-bde1fcd96d21/generic_message_responses/1.0.1/Sample Responses/record_delete_success.raml
 
@@ -146,14 +143,12 @@ uses:
       200:
         body:
           application/json:
-            type: v_task_master[]
             examples:
               output: !include Sample Responses/v_task_master_example.raml 
   post:
     description: Create new task
     body:
       application/json:
-        type: new_task
         examples:
           input: !include Sample Inputs/new_task_input.raml
     responses:
@@ -210,7 +205,6 @@ uses:
         200:
           body:
             application/json:
-              type: task_verification[]
               examples:
                 output: !include  Sample Responses/task_verification_example.raml
     /commit:
@@ -223,7 +217,6 @@ uses:
           200:
             body:
               application/json:
-                type: task_verification_comm_del[]
                 examples:
                   output: !include Sample Responses/task_verification_CommDel_example.raml
 
@@ -237,7 +230,6 @@ uses:
           200:
             body:
               application/json:
-                type: task_verification_comm_del[]
                 examples:
                   output: !include Sample Responses/task_verification_CommDel_example.raml
 
@@ -287,7 +279,17 @@ uses:
         description: Update workflow status of task
         body:
           multipart/form-data:
+            properties:
+              metaData: 
+                type: string
+              fileData:
+                type: file
           application/x-www-form-urlencoded:
+            properties:
+              metaData: 
+                type: string
+              fileData:
+                type: file
           application/json:
             examples:
               input1: !include Sample Inputs/task_workflow_operation_input.raml
@@ -317,7 +319,6 @@ uses:
     description: Create new user.
     body:
       application/json:
-        type: new_user
         examples:
           input: !include Sample Inputs/new_user_input.raml
     responses:
@@ -372,7 +373,6 @@ uses:
   post:
     body:
       application/json:
-        type: map_user_project
         examples:
           input: !include Sample Inputs/map_user_project_input.raml
     responses:
@@ -397,7 +397,6 @@ uses:
   delete:
     body:
       application/json:
-        type: map_user_project
         examples:
           input: !include Sample Inputs/map_user_project_input.raml
     responses:
@@ -432,7 +431,6 @@ uses:
     description: Create new Module
     body:
       application/json:
-        type: new_module
         examples:
           input: !include Sample Inputs/new_module_input.raml
     responses:
@@ -461,7 +459,6 @@ uses:
   post:
     body:
       application/json:
-        type: map_module_project
         examples:
           input: !include Sample Inputs/map_module_project_input.raml
     responses:
@@ -496,7 +493,6 @@ uses:
     description: Create new Type
     body:
       application/json:
-        type: new_type
         examples:
           input: !include Sample Inputs/new_type_input.raml
     responses:
@@ -525,7 +521,6 @@ uses:
   post:
     body:
       application/json:
-        type: map_type_project
         examples:
           input: !include Sample Inputs/map_type_project_input.raml
     responses:
@@ -560,7 +555,6 @@ uses:
     description: Create New Priority
     body:
       application/json:
-        type: new_priority
         examples:
           input: !include Sample Inputs/new_priority_input.raml
     responses:
@@ -589,7 +583,6 @@ uses:
   post:
     body:
       application/json:
-        type: map_priority_project
         examples:
           input: !include Sample Inputs/map_priority_project_input.raml
     responses:
@@ -620,7 +613,6 @@ uses:
     description: Create New Role
     body:
       application/json:
-        type: new_role
         examples:
           input: !include Sample Inputs/new_role_input.raml
     responses:
@@ -690,5 +682,56 @@ uses:
             application/json:
               examples:
                 message: {ROLES : roles}
-    
-              
+
+/sprint:
+  get:
+    description: Get sprint based on date
+    queryParameters:
+        date:
+            required: false
+            description: get current and next sprints for given date
+            examples:
+              message: "23-02-2022"
+    responses:
+      200:
+        body:
+          application/json:
+            examples:
+              output: !include Sample Responses/sprint_list_example.raml
+  post:
+    description: Create new Sprint
+    body:
+      application/json:
+        examples:
+          input: !include Sample Inputs/new_sprint_input.raml
+    responses:
+      201:
+        body:
+          application/json:
+            examples:
+              output: !include exchange_modules/46e89148-259e-4ae9-b06b-bde1fcd96d21/generic_message_responses/1.0.1/Sample Responses/record_add_success.raml
+  put:
+    description: Update sprint
+    body:
+      application/json:
+        examples:
+          input: !include Sample Inputs/update_sprint_input.raml
+    responses:
+      201:
+        body:
+          application/json:
+            examples:
+              output: !include exchange_modules/46e89148-259e-4ae9-b06b-bde1fcd96d21/generic_message_responses/1.0.1/Sample Responses/record_update_success.raml
+  delete:
+    description: Deletes sprint and tasks associated with that sprint
+    body:
+      application/json:
+        example:
+          {sprintId: "123"}
+    responses:
+      200:
+        body:
+          application/json:
+            examples:
+              output: !include exchange_modules/46e89148-259e-4ae9-b06b-bde1fcd96d21/generic_message_responses/1.0.1/Sample Responses/record_delete_success.raml
+      

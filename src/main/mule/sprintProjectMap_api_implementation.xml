@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<flow name="createNewSprintProjectMap" doc:id="8bb6f8e4-cd89-4c3c-940c-bcccd87fe5e7" >
+		<ee:transform doc:name="Prepare payload" doc:id="aee3f95c-8917-4753-9fa8-0d29fbb21c03" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"sprintId" : payload.sprintId,
+	"projectId" : payload.projectId
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<db:insert doc:name="Sprint_Project_Map Insert" doc:id="d686fc53-203c-4242-aaaa-beb62dd64b8f" config-ref="rdbms_master_db_config" >
+			<db:sql ><![CDATA[INSERT INTO sprint_project_map ("SprintId" , "ProjectId") VALUES (:sprintid , :projectid)]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	"sprintid" : vars.backup_payload.sprintId,
+	"projectid" : vars.backup_payload.projectId
+}]]]></db:input-parameters>
+		</db:insert>
+	</flow>
+</mule>

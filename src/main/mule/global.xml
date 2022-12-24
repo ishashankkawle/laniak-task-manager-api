@@ -9,13 +9,13 @@
     <http:listener-config name="v2-httpListenerConfig">
         <http:listener-connection host="0.0.0.0" port="${PORT}" />
     </http:listener-config>
-    <apikit:config name="v2-config" api="resource::46e89148-259e-4ae9-b06b-bde1fcd96d21:v2:1.0.12:raml:zip:v2.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+    <apikit:config name="v2-config" api="resource::46e89148-259e-4ae9-b06b-bde1fcd96d21:v2:2.0.4:raml:zip:v2.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
     <global-property doc:name="Global Property" doc:id="136507a3-1d54-42ee-9b29-ccf88bd4f58b" name="env" value="dev" />
     <configuration-properties doc:name="Configuration properties" doc:id="e5e45e5b-53e4-4af4-ba08-178d74708f30" file="configurations/${env}_properties.yaml" />
     <http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="5d4a1bf7-21cf-4424-9680-74bf2bade31b">
         <http:request-connection protocol="HTTPS" host="www.filestackapi.com" />
     </http:request-config>
-    <http:request-config name="HTTP_Request_configuration1" doc:name="HTTP Request configuration" doc:id="dc00285a-8a61-406d-a5b1-8107848a152f" >
-		<http:request-connection protocol="HTTPS" host="upload.uploadcare.com" />
-	</http:request-config>
+    <http:request-config name="HTTP_Request_configuration1" doc:name="HTTP Request configuration" doc:id="dc00285a-8a61-406d-a5b1-8107848a152f">
+        <http:request-connection protocol="HTTPS" host="upload.uploadcare.com" />
+    </http:request-config>
 </mule>

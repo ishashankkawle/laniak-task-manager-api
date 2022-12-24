@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="mainSprintFlow" doc:id="86993a3f-813b-4f46-96c7-640c7a015d97" doc:description="This flow will fetch sprints based on Project only">
+		<choice doc:name="Choice" doc:id="34b8cb20-a406-4c2b-aa1c-43be06881321" >
+			<when expression="#[attributes.queryParams.date?]">
+				<flow-ref doc:name="getSprintBaseOnDate" doc:id="8523664d-ce30-463a-9feb-3371015e34c0" name="getSprintBaseOnDate"/>
+			</when>
+			<otherwise >
+				<flow-ref doc:name="getAllSprint" doc:id="149e58ce-c184-4664-a885-49012600742c" name="getAllSprint"/>
+			</otherwise>
+		</choice>
+	</flow>
+	<flow name="getAllSprint" doc:id="0a989c6e-cdbc-40d4-88f7-13ab0a7a2e18" >
+		<db:select doc:name="Select" doc:id="68fc4afe-cf73-46f8-a2ef-20e3736e5952" config-ref="rdbms_master_db_config">
+			<db:sql ><![CDATA[SELECT * FROM View_sprintProjectMap WHERE "ProjectId" = :projectId]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{'projectId' : attributes.queryParams.projectId}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="3b19dc80-6b7a-4276-92a6-c813622bdb21" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="getSprintBaseOnDate" doc:id="65d6e5d1-7ff3-4362-b263-a80c2a713d7b" >
+		<db:select doc:name="Select" doc:id="78f737aa-f5eb-439b-9028-a6ea2c090484" config-ref="rdbms_master_db_config" >
+			<db:sql ><![CDATA[SELECT * FROM View_sprintProjectMap WHERE "ProjectId" = :projectid AND "StartDate" >= :startdate]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	'projectid' : attributes.queryParams.projectId,
+	'startdate' : attributes.queryParams.date
+}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="2d1da8e0-289a-4fe1-af2a-7e021a5410da" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="createNewSprint" doc:id="45daf69d-beb7-4a4f-a462-b6d84a513e6f" >
+		<set-variable value="#[payload]" doc:name="Set backup_payload" doc:id="b4bad943-5685-4b4e-b93f-c97db0eb3191" variableName="backup_payload" />
+		<flow-ref doc:name="generateNewId" doc:id="7d2227a5-4865-493b-81f7-5499ab71b32b" name="generateNewId" />
+		<set-variable value='#[%dw 2.0&#10;output application/json&#10;---&#10;vars.backup_payload default {} ++ {"sprintId" : payload.nextval}]' doc:name="Reset backup_payload" doc:id="796f3cd9-e1d3-4170-bf04-21d62d5d4503" variableName="backup_payload" />
+		<try doc:name="Try" doc:id="9dd5f047-6c76-4cfa-9674-aa01624b6ef8" transactionalAction="ALWAYS_BEGIN" >
+			<db:insert doc:name="Sprint_Master Insert" doc:id="9fbb9f9b-e0f7-497f-b288-605eaf46a746" config-ref="rdbms_master_db_config">
+			<db:sql><![CDATA[INSERT INTO sprint_master ("SprintId", "Sprint", "StartDate" , "EndDate") VALUES (:sprintid , :sprint, :startdate , :enddate)]]></db:sql>
+			<db:input-parameters><![CDATA[#[{
+	"sprintid" : vars.backup_payload.sprintId,
+	"sprint" : vars.backup_payload.sprintName,
+	"startdate" : vars.backup_payload.startDate,
+	"enddate" : vars.backup_payload.endDate
+}]]]></db:input-parameters>
+		</db:insert>
+			<ee:transform doc:name="Transform Message" doc:id="99c052dc-9a36-45a1-8a32-c0bf9b46b994" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+vars.backup_payload]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+			<flow-ref doc:name="createNewSprintProjectMap" doc:id="25f2d500-6fef-4d02-94f5-0a0937a84ab0" name="createNewSprintProjectMap"/>
+		</try>
+	</flow>
+	<flow name="deleteSprintFlow" doc:id="1b4b2813-406e-4be7-9e67-69aaf0e6f4cb" >
+		<set-variable value="#[payload]" doc:name="Set backup_payload" doc:id="a2243e3d-e4d8-4004-966b-4bbb4b327a48" variableName="backup_payload" />
+		<db:select doc:name="Select" doc:id="fd50d5bb-978c-47f6-b1c5-513d5daf2c73" config-ref="rdbms_master_db_config">
+			<db:sql ><![CDATA[SELECT count(*) FROM task_master WHERE "SprintId" = :sprintid]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	'sprintid' : vars.backup_payload.sprintId
+}]]]></db:input-parameters>
+		</db:select>
+		<choice doc:name="Choice" doc:id="f9c00386-d8e8-4d54-8381-a10d3ec3e30b" >
+			<when expression="#[payload.count != 0]">
+				<ee:transform doc:name="Transform Message" doc:id="6ff3b68d-b490-4e16-856f-cfdd6ccb2720" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message" : "Failed to delete Sprint. There are some active tasks pending in sprint. Please Mark them as Complete / Delete and try again."
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise >
+				<try doc:name="Try" doc:id="6e191aa2-f0b5-4222-ab03-40951cd92720" transactionalAction="ALWAYS_BEGIN">
+					<db:delete doc:name="Delete sprint" doc:id="9080836a-9c22-4172-bf9f-17b4e82ea7b0" config-ref="rdbms_master_db_config">
+						<db:sql><![CDATA[DELETE FROM sprint_master where "SprintId" = :sprintid]]></db:sql>
+						<db:input-parameters><![CDATA[#[{
+	'sprintid' : vars.backup_payload.sprintId
+}]]]></db:input-parameters>
+					</db:delete>
+					<db:select doc:name="Select tasks" doc:id="0353a4fb-01a0-4681-a4f5-d7e14a4e1aa1" config-ref="rdbms_master_db_config" >
+						<db:sql ><![CDATA[SELECT "TaskId" FROM task_master WHERE "SprintId" = :sprintid]]></db:sql>
+						<db:input-parameters ><![CDATA[#[{
+	'sprintid' : vars.backup_payload.sprintId
+}]]]></db:input-parameters>
+					</db:select>
+					<ee:transform doc:name="Transform Message" doc:id="4c4f0826-011b-4adb-a896-af0de94cb28a" >
+						<ee:message >
+							<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload map ((item, index) -> {
+    "ID" : item.TaskId
+})]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
+					<foreach doc:name="For Each" doc:id="f70d9ee1-ed23-4562-a501-7a5fd21cbc42" >
+						<flow-ref doc:name="deleteTaskFlow" doc:id="f2b561ea-5c18-4ecd-824b-435128096daf" name="deleteTaskFlow"/>
+					</foreach>
+				</try>
+			</otherwise>
+		</choice>
+	</flow>
+</mule>

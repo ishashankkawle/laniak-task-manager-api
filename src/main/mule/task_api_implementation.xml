@@ -24,6 +24,22 @@ payload]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
 	</flow>
+	<flow name="getAllCompletedTasks" doc:id="8172e55a-8fa1-4bac-a5c1-5ce6ad8c3dca" >
+		<db:select doc:name="Select" doc:id="3fe30a11-6390-4f95-a5ff-0b4a7910553c" config-ref="rdbms_master_db_config" >
+			<db:sql ><![CDATA[SELECT * FROM task_master WHERE "TaskStatus" IN ('Complete' , 'Delete')]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	"taskid" : vars.backup_payload.ID
+}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="44f64880-504f-412f-abd0-89c5bc561903" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
 	<flow name="getTaskOnFilterCondition" doc:id="c5e1bed9-deac-4ba9-ba1d-c02ba53604dd">
 		<set-variable value="#[attributes.queryParams.taskFilter]" doc:name="Set Filter" doc:id="2c96eeb9-5966-46b9-b201-08a4b0b1085c" variableName="filter" />
 		<set-variable value="#[attributes.queryParams.filterParam]" doc:name="Set Value" doc:id="a0983957-af3d-425a-b53c-f9e78f889307" variableName="value" />
@@ -445,14 +461,14 @@ payload]]></ee:set-payload>
 		<set-variable value='#[%dw 2.0&#10;output application/json&#10;---&#10;vars.backup_payload ++ {"taskId" : payload.nextval}]' doc:name="Reset backup_payload" doc:id="546b7dfe-d286-44af-a329-ede015fa0a4b" variableName="backup_payload"/>
 		<try doc:name="Try" doc:id="70b41131-bdc3-4406-9c22-cf86938b5d64" transactionalAction="ALWAYS_BEGIN">
 			<db:insert doc:name="Task_Master Insert" doc:id="3c34235d-8bd2-4a40-8021-1ec54594fa14" config-ref="rdbms_master_db_config">
-				<db:sql ><![CDATA[INSERT INTO task_master ( "TaskId", "ProjectId", "Module", "Title", "Description", "DateTerminated", "Owner", "Assigner", "TaskStatus", "Type", "Priority", "DateCreated") VALUES ( :taskid , :projectid , :moduleid , :title , :description , :dateterminated , :owner , :assigner , :taskstatus , :type , :priority , CURRENT_DATE)]]></db:sql>
+				<db:sql ><![CDATA[INSERT INTO task_master ( "TaskId", "ProjectId", "Module", "Title", "Description", "SprintId", "Owner", "Assigner", "TaskStatus", "Type", "Priority", "DateCreated") VALUES ( :taskid , :projectid , :moduleid , :title , :description , :sprintid , :owner , :assigner , :taskstatus , :type , :priority , CURRENT_DATE)]]></db:sql>
 				<db:input-parameters ><![CDATA[#[{
 	"taskid" : vars.backup_payload.taskId,
 	"projectid" : vars.backup_payload.projectId,
 	"moduleid" : vars.backup_payload.module,
 	"title" : vars.backup_payload.title,
 	"description" : vars.backup_payload.description,
-	"dateterminated" : vars.backup_payload.dateTerminated,
+	"sprintid" : vars.backup_payload.sprintId,
 	"owner" : vars.backup_payload.owner,
 	"assigner" : vars.backup_payload.assigner,
 	"taskstatus" : vars.backup_payload.taskStatus,
