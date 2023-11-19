@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:mongo="http://www.mulesoft.org/schema/mule/mongo" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation=" http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd http://www.mulesoft.org/schema/mule/mongo http://www.mulesoft.org/schema/mule/mongo/current/mule-mongo.xsd">
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:mongo="http://www.mulesoft.org/schema/mule/mongo" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation=" http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd http://www.mulesoft.org/schema/mule/mongo http://www.mulesoft.org/schema/mule/mongo/current/mule-mongo.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
     <db:config name="rdbms_master_db_config" doc:name="Database Config" doc:id="3bca79e3-da4e-4e3b-a6bb-5252b5bcf57d">
         <db:generic-connection url="jdbc:postgresql://drona.db.elephantsql.com:5432/uuktnljs" driverClassName="org.postgresql.Driver" user="uuktnljs" password="Bd-dHv74TDkC-XcBp5Sp-du4xiomzwo1" />
     </db:config>
@@ -8,14 +8,96 @@
     </mongo:config>
     <http:listener-config name="v2-httpListenerConfig">
         <http:listener-connection host="0.0.0.0" port="${PORT}" />
+        <http:listener-interceptors>
+            <http:cors-interceptor>
+                <http:origins>
+                    <http:public-resource />
+                </http:origins>
+            </http:cors-interceptor>
+        </http:listener-interceptors>
     </http:listener-config>
-    <apikit:config name="v2-config" api="resource::46e89148-259e-4ae9-b06b-bde1fcd96d21:v2:2.0.4:raml:zip:v2.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+    <apikit:config name="v2-config" api="resource::46e89148-259e-4ae9-b06b-bde1fcd96d21:v2:2.0.12:raml:zip:v2.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
     <global-property doc:name="Global Property" doc:id="136507a3-1d54-42ee-9b29-ccf88bd4f58b" name="env" value="dev" />
     <configuration-properties doc:name="Configuration properties" doc:id="e5e45e5b-53e4-4af4-ba08-178d74708f30" file="configurations/${env}_properties.yaml" />
-    <http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="5d4a1bf7-21cf-4424-9680-74bf2bade31b">
+    <http:request-config name="HTTP_Request_configuration_filestack" doc:name="HTTP Request configuration" doc:id="5d4a1bf7-21cf-4424-9680-74bf2bade31b">
         <http:request-connection protocol="HTTPS" host="www.filestackapi.com" />
     </http:request-config>
-    <http:request-config name="HTTP_Request_configuration1" doc:name="HTTP Request configuration" doc:id="dc00285a-8a61-406d-a5b1-8107848a152f">
+    <http:request-config name="HTTP_Request_configuration_uploadcare" doc:name="HTTP Request configuration" doc:id="dc00285a-8a61-406d-a5b1-8107848a152f">
         <http:request-connection protocol="HTTPS" host="upload.uploadcare.com" />
     </http:request-config>
+    <http:request-config name="HTTP_Request_configuration_grafana" doc:name="HTTP Request configuration" doc:id="dfccfcdb-0253-4a71-8c92-94dd8ab002bd" basePath="/loki/api/v1">
+        <http:request-connection protocol="HTTPS" host="logs-prod-us-central1.grafana.net">
+            <reconnection>
+                <reconnect />
+            </reconnection>
+        </http:request-connection>
+    </http:request-config>
+    <flow name="Logger" doc:id="225e459d-ee76-469c-84db-d58d55a448eb">
+        <async doc:name="Async" doc:id="482f98cd-ef8d-4fad-91dd-217a76d3a89d">
+            <ee:transform doc:name="Transform Message" doc:id="47221ebc-e970-4e49-ae22-6f773067f443">
+                <ee:message />
+                <ee:variables>
+                    <ee:set-variable variableName="log_body"><![CDATA[%dw 2.0
+output application/json
+---
+
+{
+  "streams": [
+    {
+      "stream": {
+        "label": vars.log.log_label
+      },
+      "values": [
+          [ (now() as Number) ++ "000000000", write(vars.log , 'application/json')]
+      ]
+    }
+  ]
+}]]></ee:set-variable>
+                </ee:variables>
+            </ee:transform>
+            <http:request method="POST" doc:name="Request" doc:id="7ea28bbb-fa50-4aec-bea7-697a5866d4a8" config-ref="HTTP_Request_configuration_grafana" path="/push">
+                <http:body><![CDATA[#[vars.log_body]]]></http:body>
+                <http:headers><![CDATA[#[output application/java
+---
+{
+	"Authorization" : "Basic ODMyNzg6ZXlKcklqb2lORFV4TmpnNVlXUTBPV0ZpWm1Gak56UmhaR1E0TnpsbU56aGxZemxsTWpoak5qTmtOV05pT1NJc0ltNGlPaUowWlhOMElpd2lhV1FpT2pVeU5EZzVPSDA9"
+}]]]></http:headers>
+            </http:request>
+        </async>
+        <error-handler>
+            <on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="716adc72-e26b-44cf-b8e4-becca5f985fd">
+                <async doc:name="Async" doc:id="cb9a0483-cc54-4589-b552-bda95555f4d6">
+                    <ee:transform doc:name="Transform Message" doc:id="f052e144-a39f-46ee-bc92-4c5c7a6d45be">
+                        <ee:message />
+                        <ee:variables>
+                            <ee:set-variable variableName="log_body"><![CDATA[%dw 2.0
+output application/json
+---
+
+{
+  "streams": [
+    {
+      "stream": {
+        "label": "data"
+      },
+      "values": [
+          [ (now() as Number) ++ "000000000", error.detailedDescription]
+      ]
+    }
+  ]
+}]]></ee:set-variable>
+                        </ee:variables>
+                    </ee:transform>
+                    <http:request method="POST" doc:name="Request" doc:id="9ed4f2d8-6849-4163-8e7a-998490120884" config-ref="HTTP_Request_configuration_grafana" path="/push">
+                        <http:body><![CDATA[#[vars.log_body]]]></http:body>
+                        <http:headers><![CDATA[#[output application/java
+---
+{
+	"Authorization" : "Basic ODMyNzg6ZXlKcklqb2lORFV4TmpnNVlXUTBPV0ZpWm1Gak56UmhaR1E0TnpsbU56aGxZemxsTWpoak5qTmtOV05pT1NJc0ltNGlPaUowWlhOMElpd2lhV1FpT2pVeU5EZzVPSDA9"
+}]]]></http:headers>
+                    </http:request>
+                </async>
+            </on-error-continue>
+        </error-handler>
+    </flow>
 </mule>

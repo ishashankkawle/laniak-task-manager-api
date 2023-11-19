@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<flow name="authentication_flow" doc:id="6d2a9410-4647-4411-ae5a-202708775894" >
+		<logger level="INFO" doc:name="Logger" doc:id="0de40d6c-fac5-49ac-b736-f5a04c3f023d" />
+		<ee:transform doc:name="Transform Message" doc:id="f4365bd6-0b3f-437b-9847-d34555261962" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	userId : payload.username,
+	password : payload.password
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="Transform Message" doc:id="053ad06e-5b25-460a-b79d-7dcf84150b3b" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+"select \"UserId\" from user_master where \"UserName\" = '" ++ payload.userId ++ "' and \"Password\" = encode('" ++ payload.password ++ "', 'base64')"]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<db:select doc:name="Select" doc:id="191f4eed-c0b8-458a-8185-36a987770aaa" config-ref="rdbms_master_db_config">
+			<db:sql ><![CDATA[#[payload]]]></db:sql>
+		</db:select>
+		<choice doc:name="Choice" doc:id="aa0f2ed2-2892-44ad-a3a8-1c447308ea6a" >
+			<when expression="#[sizeOf(payload) == 1]">
+				<db:select doc:name="Select" doc:id="10c21d82-4553-46a6-92c9-93f77b5182f1" config-ref="rdbms_master_db_config">
+					<db:sql ><![CDATA[SELECT * FROM view_usermaster WHERE "UserId" = :userid]]></db:sql>
+					<db:input-parameters ><![CDATA[#[{
+	userid : payload[0].UserId
+}]]]></db:input-parameters>
+				</db:select>
+				<ee:transform doc:name="Transform Message" doc:id="199933cb-927c-45bc-a710-ac5ed80035eb">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload[0] ++ {auth : "success"}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			</when>
+			<otherwise>
+				<ee:transform doc:name="Transform Message" doc:id="32b0b7a6-f1c3-4980-9bd2-6bbb4c1e02ce" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	auth : "failed"
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</otherwise>
+		</choice>
+	</flow>
+</mule>

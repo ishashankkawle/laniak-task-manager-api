@@ -15,6 +15,23 @@ http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/
 			</otherwise>
 		</choice>
 	</flow>
+	<flow name="getActiveSprint" doc:id="7394da8a-ed04-4750-a9ee-ac5cd00bfe6c" >
+		<db:select doc:name="Select" doc:id="7c9c0209-22c3-469b-aebd-0b090bbed1fd" config-ref="rdbms_master_db_config">
+			<db:sql ><![CDATA[SELECT * FROM View_sprintProjectMap WHERE "ProjectId" = :projectid AND "StartDate" <= :provideddate and "EndDate" >= :provideddate]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	'projectid' : attributes.queryParams.projectId,
+	'provideddate' : attributes.queryParams.date
+}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="9c249de9-2cd4-4e08-a230-e3ef563875bd" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
 	<flow name="getAllSprint" doc:id="0a989c6e-cdbc-40d4-88f7-13ab0a7a2e18" >
 		<db:select doc:name="Select" doc:id="68fc4afe-cf73-46f8-a2ef-20e3736e5952" config-ref="rdbms_master_db_config">
 			<db:sql ><![CDATA[SELECT * FROM View_sprintProjectMap WHERE "ProjectId" = :projectId]]></db:sql>
@@ -31,7 +48,7 @@ payload]]></ee:set-payload>
 	</flow>
 	<flow name="getSprintBaseOnDate" doc:id="65d6e5d1-7ff3-4362-b263-a80c2a713d7b" >
 		<db:select doc:name="Select" doc:id="78f737aa-f5eb-439b-9028-a6ea2c090484" config-ref="rdbms_master_db_config" >
-			<db:sql ><![CDATA[SELECT * FROM View_sprintProjectMap WHERE "ProjectId" = :projectid AND "StartDate" >= :startdate]]></db:sql>
+			<db:sql ><![CDATA[SELECT * FROM View_sprintProjectMap WHERE "ProjectId" = :projectid AND "StartDate" <= :startdate]]></db:sql>
 			<db:input-parameters ><![CDATA[#[{
 	'projectid' : attributes.queryParams.projectId,
 	'startdate' : attributes.queryParams.date

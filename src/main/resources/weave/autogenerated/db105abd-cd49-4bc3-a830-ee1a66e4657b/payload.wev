@@ -1,0 +1,8 @@
+%dw 2.0
+
+type auto_db105abd_cd49_4bc3_a830_ee1a66e4657b_Output_Variables_backup_payload = {|
+  projectId: Number | Null, 
+  projectName: Any, 
+  userId: Any
+|}
+

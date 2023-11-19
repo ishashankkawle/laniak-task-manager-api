@@ -1,0 +1,466 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:mongo="http://www.mulesoft.org/schema/mule/mongo"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd 
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd 
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/mongo http://www.mulesoft.org/schema/mule/mongo/current/mule-mongo.xsd">
+<flow name="getAllTasks" doc:id="cb257215-e5ac-4ce8-85c1-97347cd46761">
+		<db:select doc:name="Select" doc:id="0d295f7d-8309-4546-b8c6-d764b7e71a8e" config-ref="rdbms_master_db_config">
+			<reconnect />
+			<db:sql ><![CDATA[SELECT * FROM view_taskmaster]]></db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="25653c8b-fc38-4cc6-89ef-fd57db2562f3" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="getAllCompletedTasks" doc:id="8172e55a-8fa1-4bac-a5c1-5ce6ad8c3dca" >
+		<db:select doc:name="Select" doc:id="3fe30a11-6390-4f95-a5ff-0b4a7910553c" config-ref="rdbms_master_db_config" >
+			<db:sql ><![CDATA[SELECT * FROM task_master WHERE "TaskStatus" IN ('Complete' , 'Delete')]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	"taskid" : vars.backup_payload.ID
+}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="44f64880-504f-412f-abd0-89c5bc561903" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="getTaskOnFilterCondition" doc:id="c5e1bed9-deac-4ba9-ba1d-c02ba53604dd">
+		<set-variable value="#[attributes.queryParams.taskFilter]" doc:name="Set Filter" doc:id="2c96eeb9-5966-46b9-b201-08a4b0b1085c" variableName="filter" />
+		<set-variable value="#[attributes.queryParams.filterParam]" doc:name="Set Value" doc:id="a0983957-af3d-425a-b53c-f9e78f889307" variableName="value" />
+		<set-variable value="#[&quot;SELECT * FROM view_taskmaster WHERE \&quot;&quot; ++ vars.filter as String default &quot;dummy&quot; ++ &quot;\&quot; = '&quot; ++ vars.value as String default &quot;dummy&quot; ++ &quot;'&quot;]" doc:name="Generate Dynamic Query" doc:id="0e249a40-551d-4542-b139-6b63c47fb866" variableName="query" />
+		<db:select doc:name="Select" doc:id="3dd31a23-3b50-4804-8569-a550eeddfc33" config-ref="rdbms_master_db_config">
+			<db:sql><![CDATA[#[vars.query]]]></db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="14783d0f-58e4-44c2-a5ed-1c44d4776d2a">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="mainTaskFlow" doc:id="ab140abe-e530-4351-ae48-a17943db4c6b" >
+		<choice doc:name="Choice" doc:id="1432e2df-ece6-48bd-8e51-18b266e94208" >
+			<when expression="#[sizeOf(attributes.queryParams) != 0]">
+				<flow-ref doc:name="get Tasks Using Filter" doc:id="0d4b7e39-8363-42f0-805c-f2c16394aa15" name="getTaskOnFilterCondition"/>
+			</when>
+			<otherwise >
+				<flow-ref doc:name="get All Tasks" doc:id="6686faf5-4387-455a-992f-c5a06cf3d4a3" name="getAllTasks"/>
+			</otherwise>
+		</choice>
+		<ee:transform doc:name="Transform Message" doc:id="b4fc908d-c928-4e9b-aef8-0ed7037cc0eb" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="getTasksById" doc:id="815a9fb6-0ea8-41c1-8161-2a21d6eec916" >
+		<ee:transform doc:name="Transform Message" doc:id="298297f5-8a6e-4bb5-970c-9050e75fceb9" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"taskId": if( attributes.uriParams.ID? ) attributes.uriParams.ID else vars.backup_payload.taskId
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<db:select doc:name="Select" doc:id="c37117f2-d757-4d68-988f-d7431125a5b3" config-ref="rdbms_master_db_config">
+			<reconnect />
+			<db:sql ><![CDATA[SELECT * FROM view_taskmaster AS ms WHERE ms."TaskId" = :taskId]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{'taskId' : payload.taskId}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="d459ae3a-bf80-4e2e-895f-171b83cf8243" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="abc" ><![CDATA[%dw 2.0
+output application/java
+---
+payload.abc]]></ee:set-variable>
+				<ee:set-variable variableName="task" ><![CDATA[%dw 2.0
+output application/java
+---
+payload.id]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+	</flow>
+	<flow name="getTaskActivity" doc:id="b1039552-2f34-46ca-89fd-e0c76303833d">
+		<set-variable value="#[output application/json&#10;---&#10;if( attributes.uriParams.ID? ) attributes.uriParams.ID as Number else payload.taskId as Number]" doc:name="Set Variable" doc:id="1bd227d3-7d24-4574-bef4-1250fcd909f0" variableName="taskId"/>
+		<ee:transform doc:name="Transform Message" doc:id="47d4d7c5-08c3-4bfb-a577-798ef89408f2">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"taskId" : vars.taskId as Number
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<mongo:find-documents doc:name="Find documents" doc:id="e984de39-c227-429e-8ccf-ac68b1b54230" config-ref="MongoDB_Config" collectionName="ETMHistoryCollection" fields=",">
+			<mongo:query><![CDATA[#[payload]]]></mongo:query>
+		</mongo:find-documents>
+		<ee:transform doc:name="Transform Message" doc:id="5248b928-c28d-4c5c-9bb6-d2fedf43c2e5">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload[0]]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="getTaskByIdWithActivity" doc:id="36dd90b7-165a-45be-9d74-d8b0652b5f55" >
+		<set-variable value="#[attributes.queryParams]" doc:name="Set Variable" doc:id="91e42af4-95e5-4266-a051-1cbe1b3a67f6" variableName="backup_payload"/>
+		<scatter-gather doc:name="Scatter-Gather" doc:id="5f6b025f-f9fa-4b71-8127-71dccc08263c" >
+			<route >
+				<flow-ref doc:name="getTasksById" doc:id="dc8adf47-eff2-4d21-bd5b-ca14787e26db" name="getTasksById"/>
+			</route>
+			<route >
+				<flow-ref doc:name="getTaskActivity" doc:id="973ca20c-21ed-4a05-a6ee-9d3412dcb63c" name="getTaskActivity"/>
+			</route>
+		</scatter-gather>
+		<ee:transform doc:name="Transform Message" doc:id="5459bf62-037b-49eb-9dc8-0d3edf3a4256" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="mainTaskById" doc:id="5de62e94-37c1-4f3f-8b0f-b574ac7d675c" >
+		<choice doc:name="Choice" doc:id="71bdbe19-801c-47cc-b734-27aed0e10ca1" >
+			<when expression='#[attributes.queryParams.activity == "false"]'>
+				<flow-ref doc:name="getTasksById" doc:id="d5a224a1-e6d0-483d-995d-46aaa993de9a" name="getTasksById"/>
+			</when>
+			<otherwise >
+				<flow-ref doc:name="getTaskByIdWithActivity" doc:id="1ab276d4-e5f0-45a0-b8cc-1ca4057cbfca" name="getTaskByIdWithActivity"/>
+			</otherwise>
+		</choice>
+	</flow>
+		<flow name="getVerificationCommits" doc:id="2f5ac52b-70e1-454e-b22f-71672afadd7c" >
+		<choice doc:name="Choice" doc:id="84ab8c1b-cf89-4302-b409-eb05307adbb5" >
+			<when expression="#[attributes.queryParams.userId != null]">
+				<db:select doc:name="Select" doc:id="79585296-d70f-408b-9d38-03ac3e1eb193" config-ref="rdbms_master_db_config">
+					<reconnect />
+					<db:sql ><![CDATA[SELECT "TaskId", "Title", "Module" , "TaskStatus" FROM View_TaskMaster WHERE "TaskAssigner" = :userId  AND "TaskStatus" = 'Self_Commit']]></db:sql>
+					<db:input-parameters ><![CDATA[#[{'userId' : attributes.queryParams.userId}]]]></db:input-parameters>
+				</db:select>
+			</when>
+			<otherwise >
+				<db:select doc:name="Select" doc:id="64c3519a-033b-459a-a8e3-aaa4479d9322" config-ref="rdbms_master_db_config">
+					<reconnect />
+					<db:sql ><![CDATA[SELECT "TaskId", "Title", "Module" , "TaskStatus" FROM View_TaskMaster WHERE "TaskStatus" = 'Self_Commit']]></db:sql>
+				</db:select>
+			</otherwise>
+		</choice>
+		<ee:transform doc:name="Transform Message" doc:id="dac30709-c178-4240-a306-b5ae1975d6e5" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="getVerificationDeletes" doc:id="4e8d9e74-229c-45e3-8b19-59faf43d71b3" >
+		<choice doc:name="Choice" doc:id="c6622fc4-2dbb-45fb-a0fb-d3bb92557578" >
+			<when expression="#[attributes.queryParams.userId != null]" >
+				<db:select doc:name="Select" doc:id="89c20924-58cb-4c3f-9fe9-21815b18efde" config-ref="rdbms_master_db_config" >
+					<reconnect />
+					<db:sql ><![CDATA[SELECT "TaskId", "Title", "Module" , "TaskStatus" FROM View_TaskMaster WHERE "TaskAssigner" = :userId  AND "TaskStatus" = 'Self_Delete']]></db:sql>
+					<db:input-parameters ><![CDATA[#[{'userId' : attributes.queryParams.userId}]]]></db:input-parameters>
+				</db:select>
+			</when>
+			<otherwise >
+				<db:select doc:name="Select" doc:id="f8b79979-8304-4228-9f02-f5350fbae214" config-ref="rdbms_master_db_config" >
+					<reconnect />
+					<db:sql ><![CDATA[SELECT "TaskId", "Title", "Module" , "TaskStatus" FROM View_TaskMaster WHERE "TaskStatus" = 'Self_Delete']]></db:sql>
+				</db:select>
+			</otherwise>
+		</choice>
+		<ee:transform doc:name="Transform Message" doc:id="675e8132-6a20-4221-a010-79c43571ff97" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="mainTaskVerificationFlow" doc:id="aed3231c-1f3d-48e2-a241-4fe4106b01d6" >
+		<scatter-gather doc:name="Scatter-Gather" doc:id="0bfae903-5a6c-41e7-911c-687077ecd56b" >
+			<route >
+				<flow-ref doc:name="get Verification Commits" doc:id="1fc248df-8751-4eac-b3ed-ba639002687b" name="getVerificationCommits"/>
+			</route>
+			<route >
+				<flow-ref doc:name="get Verification Deletes" doc:id="60a5ff50-d2ce-409b-ac2d-9eb9820f9c81" name="getVerificationDeletes"/>
+			</route>
+		</scatter-gather>
+		<ee:transform doc:name="Transform Message" doc:id="72c7bf48-cfa1-4afd-8bf6-224a84d8524a" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+flatten(payload..payload)]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="getUserBasedRCSUtilization" doc:id="206a506a-1f4f-4af1-9dc8-8bc845638895" >
+		<db:select doc:name="Select" doc:id="7c6ed62f-221b-4b9d-bcaf-4d3b333cca2e" config-ref="rdbms_master_db_config">
+			<db:sql ><![CDATA[SELECT "TaskId" , "Title" , "EndDate" , "Module" , "TaskStatus" , "OwnerName" FROM view_taskmaster WHERE "TaskAssigner" = :userId]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{'userId' : attributes.queryParams.userId}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="0472a294-4bac-4057-b802-d5f82894f42e" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="getAllRCSUtilization" doc:id="03db69af-b7e3-4b70-94a8-772faa6912af" >
+		<db:select doc:name="Select" doc:id="e41cc69d-d70f-4c3d-81b0-fe21d903ea98" config-ref="rdbms_master_db_config" >
+			<db:sql ><![CDATA[SELECT "TaskId" , "Title" , "EndDate" , "Module" , "TaskStatus" , "OwnerName" FROM view_taskmaster]]></db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="9fdda18c-8f7e-4451-b833-4435aeb688d6" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="getUserBasedRCSSummary" doc:id="e7d0e391-5f07-4297-8615-e59dc616bf68">
+		<db:select doc:name="Select" doc:id="618108e4-9f62-4edd-ad74-18af8354cd31" config-ref="rdbms_master_db_config">
+			<db:sql><![CDATA[SELECT "OwnerName" , count(0) FROM view_taskmaster WHERE "TaskAssigner" = :userId GROUP BY "OwnerName"]]></db:sql>
+			<db:input-parameters><![CDATA[#[{'userId' : attributes.queryParams.userId}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="b3d76325-4e9f-4be7-9ff2-9c2c96961f79">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="getAllRCSSummary" doc:id="6d11b02c-61bc-4838-913c-444d6ac0773b" >
+		<db:select doc:name="Select" doc:id="2915602e-134c-4fd8-9126-b5993a70a697" config-ref="rdbms_master_db_config">
+			<db:sql ><![CDATA[SELECT "OwnerName" , count(0) FROM view_taskmaster GROUP BY "OwnerName"]]></db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="2b011f1a-0a78-4dc0-826a-c8640040239f" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="mainTaskRCSUtilizationFlow" doc:id="3eaaff66-5f30-4468-a48d-2bc76ef5e11a" >
+		<choice doc:name="Choice" doc:id="d3a0816d-0deb-444f-a251-5418c6850d79" >
+			<when expression='#[attributes.queryParams.userId != null and attributes.queryParams.summary == "false"]'>
+				<flow-ref doc:name="getUserBasedRCSUtilization" doc:id="d664b675-c8a5-4696-8cda-2829d98aff25" name="getUserBasedRCSUtilization"/>
+			</when>
+			<when expression='#[attributes.queryParams.userId == null and attributes.queryParams.summary == "false"]'>
+				<flow-ref doc:name="getAllRCSUtilization" doc:id="b2fa9aa7-5d8b-431c-81ff-df678231c9ff" name="getAllRCSUtilization"/>
+			</when>
+			<when expression='#[attributes.queryParams.userId != null and attributes.queryParams.summary == "true"]'>
+				<flow-ref doc:name="getUserBasedRCSSummary" doc:id="ab2bd87d-dd57-42c1-a141-4f0d660c7580" name="getUserBasedRCSSummary"/>
+			</when>
+			<otherwise >
+				<flow-ref doc:name="getAllRCSSummary" doc:id="f8cbdb19-8eb2-4c35-b0e7-1fe1b7f965b0" name="getAllRCSSummary"/>
+			</otherwise>
+		</choice>
+		<ee:transform doc:name="Transform Message" doc:id="2d6c9086-5e24-44c7-83e0-cb48836df489" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="createNewTask" doc:id="5aacc7a1-772c-428e-822f-bba7636e400d" >
+		<set-variable value="#[payload]" doc:name="Set backup_payload" doc:id="5dd14675-65de-4bad-954e-803712a01c56" variableName="backup_payload" />
+		<flow-ref doc:name="generateNewId" doc:id="61d310ed-f4ef-4c28-b088-dfef5cedfe8b" name="generateNewId" />
+		<set-variable value='#[%dw 2.0&#10;output application/json&#10;---&#10;vars.backup_payload ++ {"taskId" : payload.nextval}]' doc:name="Reset backup_payload" doc:id="546b7dfe-d286-44af-a329-ede015fa0a4b" variableName="backup_payload"/>
+		<try doc:name="Try" doc:id="70b41131-bdc3-4406-9c22-cf86938b5d64" transactionalAction="ALWAYS_BEGIN">
+			<db:insert doc:name="Task_Master Insert" doc:id="3c34235d-8bd2-4a40-8021-1ec54594fa14" config-ref="rdbms_master_db_config">
+				<db:sql ><![CDATA[INSERT INTO task_master ( "TaskId", "ProjectId", "Module", "Title", "Description", "Sprint", "Owner", "Assigner", "TaskStatus", "Type", "Priority", "DateCreated") VALUES ( :taskid , :projectid , :moduleid , :title , :description , :sprintid , :owner , :assigner , :taskstatus , :type , :priority , CURRENT_DATE)]]></db:sql>
+				<db:input-parameters ><![CDATA[#[{
+	"taskid" : vars.backup_payload.taskId,
+	"projectid" : vars.backup_payload.projectId,
+	"moduleid" : vars.backup_payload.module,
+	"title" : vars.backup_payload.title,
+	"description" : vars.backup_payload.description,
+	"sprintid" : vars.backup_payload.sprintId,
+	"owner" : vars.backup_payload.owner,
+	"assigner" : vars.backup_payload.assigner,
+	"taskstatus" : vars.backup_payload.taskStatus,
+	"type" : vars.backup_payload."type",
+	"priority" : vars.backup_payload.priority
+}]]]></db:input-parameters>
+			</db:insert>
+			<mongo:insert-document doc:name="Activity Insert" doc:id="cef59240-0a77-49d6-a50c-ed0a25725f1d" config-ref="MongoDB_Config" collectionName="ETMHistoryCollection">
+				<mongo:document ><![CDATA[#[{"taskId" : vars.backup_payload.taskId} ++ {"activity" : []}]]]></mongo:document>
+			</mongo:insert-document>
+		</try>
+	</flow>
+	<sub-flow name="updateTaskFields" doc:id="957e19ea-0bc4-4882-87f0-1ece9ded32f2" >
+		<ee:transform doc:name="Transform Message" doc:id="f0109c26-8d2a-4d7d-8fb0-c327ae881917">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	taskId : payload.taskId,
+	field: payload.field,
+	fieldValue: payload.fieldValue
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<set-variable value="#[%dw 2.0&#10;output application/json&#10;---&#10;&quot;UPDATE task_master SET \&quot;&quot; ++ payload.field ++ &quot;\&quot; = '&quot; ++ payload.fieldValue ++ &quot;' WHERE \&quot;TaskId\&quot; = '&quot; ++ payload.taskId ++ &quot;'&quot;]" doc:name="Set Variable" doc:id="423c548b-7af3-426a-a282-a53d1304733c" variableName="query" />
+		<db:update doc:name="Task_Master Update" doc:id="a8d3145c-d694-49d9-87dc-d006f3ce2fa4" config-ref="rdbms_master_db_config">
+			<db:sql><![CDATA[#[vars.query]]]></db:sql>
+		</db:update>
+		<ee:transform doc:name="Transform Message" doc:id="71a25e32-85c4-4510-b09c-80e4dbeb2cb8">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</sub-flow>
+	<sub-flow name="updateTaskActivity" doc:id="c98b9487-d6a3-49b6-a5f5-dd4d0cb96c76" >
+		<set-variable value="#[payload]" doc:name="Set Variable" doc:id="6af9742b-e06f-43c7-93c6-ef72293d9731" variableName="incomingData" />
+		<flow-ref doc:name="getTaskActivity" doc:id="fb7e22b2-da1a-490b-997c-8a897ad71595" name="getTaskActivity" />
+		<ee:transform doc:name="Transform Message" doc:id="a7711fbd-b318-410c-8f20-91c3096e62b7">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+
+var arrData = payload.activity << vars.incomingData
+---
+{
+	query: {"taskId" : payload.taskId},
+	updateObj: {activity: arrData}
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<mongo:update-documents doc:name="Update documents" doc:id="7e0e3466-754d-49a0-9b9a-bc827f00083a" config-ref="MongoDB_Config" collectionName="ETMHistoryCollection" >
+			<mongo:query ><![CDATA[#[payload.query]]]></mongo:query>
+			<mongo:content-to-update ><![CDATA[#[payload.updateObj]]]></mongo:content-to-update>
+		</mongo:update-documents>
+	</sub-flow>
+	<flow name="mainUpdateTaskFlow" doc:id="ee5e16f7-9420-4971-ac05-d3c69faf21fc" >
+		<set-variable value="#[payload]" doc:name="Set backup_payload" doc:id="55740c98-7a69-4c40-b397-38c6447da31a" variableName="backup_payload"/>
+		<set-variable value='#[%dw 2.0&#10;import * from dw::core::Strings&#10;output application/json&#10;---&#10;"SELECT \"" ++ vars.backup_payload.field ++ "\" as dataValue FROM task_master WHERE \"TaskId\" = " ++ vars.backup_payload.taskId]' doc:name="Set oldDataQuery" doc:id="d5da3918-a66b-49f0-b74d-f53126eb81d2" variableName="oldDataQuery" />
+		<db:select doc:name="Select" doc:id="9fd7ca94-39f9-4b02-9aa1-9b962bd421a6" config-ref="rdbms_master_db_config" target="oldData" targetValue="#[payload[0].datavalue]">
+			<db:sql ><![CDATA[#[vars.oldDataQuery]]]></db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="5b6824f3-fc3a-42a4-b850-2262d03f64fd">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+vars.backup_payload]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+		<flow-ref doc:name="updateTaskFields" doc:id="f84156d2-c460-465f-8085-82288bfe82cd" name="updateTaskFields" />
+		<ee:transform doc:name="Transform Message" doc:id="7cca9d3c-0df2-4866-b8ec-b661d1983abc">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	taskId: vars.backup_payload.taskId,
+	userNameBy: vars.backup_payload.userName,
+	userId: vars.backup_payload.userId,
+	dateUpdated: now(),
+	updateType: vars.backup_payload.field,
+	update: {
+		oldValue: vars.oldData,		
+		newValue: vars.backup_payload.fieldValue
+	}
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+		<flow-ref doc:name="updateTaskActivity" doc:id="f345f54d-dee1-4473-bc81-ee760691ad40" name="updateTaskActivity" />
+	</flow>
+	<flow name="deleteTaskFlow" doc:id="9d9b0b93-2c93-49f8-8ec8-be62295d4641" >
+		<set-variable value="#[payload]" doc:name="Set backup_payload" doc:id="454fa9ef-ae56-4970-bea0-865c6e7a397b" variableName="backup_payload"/>
+		<db:select doc:name="Select" doc:id="5a53a3f4-af5a-40b6-be4b-72b0ce13e97a" config-ref="rdbms_master_db_config">
+			<db:sql ><![CDATA[SELECT COUNT(*) FROM task_master WHERE "TaskId" = :taskid AND "TaskStatus" IN ('Complete' , 'Delete')]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	"taskid" : vars.backup_payload.ID
+}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="93f65212-2b91-44de-8597-5fda973aa42f" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<choice doc:name="Choice" doc:id="2240e4e1-2bbc-4319-976f-709551424a06" >
+			<when expression="#[payload.count != 0]">
+				<try doc:name="Try" doc:id="24e61e34-36b3-4f5f-8f2e-4a1a890de450" transactionalAction="ALWAYS_BEGIN">
+					<db:delete doc:name="Delete" doc:id="19c80756-5c3d-422d-8d42-1fd5318fdf4b" config-ref="rdbms_master_db_config">
+					<db:sql><![CDATA[DELETE FROM task_master WHERE "TaskId" = :taskid]]></db:sql>
+					<db:input-parameters><![CDATA[#[{
+	"taskid" : vars.backup_payload.ID
+}]]]></db:input-parameters>
+				</db:delete>
+					<mongo:remove-documents doc:name="Remove documents" doc:id="92f2fb7b-b2a6-4c80-b375-2c2d6643dfb5" config-ref="MongoDB_Config" collectionName="ETMHistoryCollection">
+						<mongo:query ><![CDATA[#[{
+	"taskId" : vars.backup_payload.ID
+}]]]></mongo:query>
+					</mongo:remove-documents>
+				</try>
+			</when>
+			<otherwise >
+				<ee:transform doc:name="Transform Message" doc:id="984c5107-0667-4fe3-8dd9-815f1142c028" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message" : "Task not found"
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</otherwise>
+		</choice>
+	</flow>
+	
+</mule>

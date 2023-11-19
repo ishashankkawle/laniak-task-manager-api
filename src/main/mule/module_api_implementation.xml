@@ -118,4 +118,20 @@ output application/json
 			</otherwise>
 		</choice>
 	</flow>
+	<flow name="getCountByProjectFlow" doc:id="ad98954b-3564-41d4-a3c0-ceda9489bd60" >
+		<db:select doc:name="Select" doc:id="0158b739-1223-4fa8-bfdd-21e491074106" config-ref="rdbms_master_db_config">
+			<db:sql ><![CDATA[select "Module" , count("Module")  from view_taskmaster vt where "ProjectId" = :projectId group by "Module"]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	"projectId" : attributes.queryParams.projectId
+}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="b83a9264-46b4-4053-908c-f8bc2844b7db" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
 </mule>

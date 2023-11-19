@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd 
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+	<flow name="getDetailedTaskSummary" doc:id="673ee4d8-19a0-4b7c-a64e-84aec144e6b5">
+		<db:select doc:name="Select" doc:id="a03dbdb7-0206-4d1f-a155-90b8a78a6cf0" config-ref="rdbms_master_db_config">
+			<db:sql><![CDATA[SELECT "TaskStatus" , count(0) FROM view_taskmaster GROUP BY "TaskStatus"]]></db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="ff4ad63a-35c2-4b83-8f31-a3e3964caf7e">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="getFilterBasedDetailedTaskSummary" doc:id="6fcd7a0f-3ba6-4cf3-b4c0-ebf9a5809551">
+		<db:select doc:name="Select" doc:id="ec7726f5-f27c-448f-bbad-30c4870b52e8" config-ref="rdbms_master_db_config">
+			<db:sql><![CDATA[#[ "SELECT \"TaskStatus\" , count(0) FROM view_taskmaster " ++ vars.filterClause ]]]></db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="248f44ef-662e-4613-9b4f-03b6851342fd">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="mainTaskSummaryFlow" doc:id="71483012-9929-4c45-ab6e-300450897e04" >
+		<choice doc:name="Choice" doc:id="b474b820-bae6-40cf-b95d-3493a685097b" >
+			<when expression="#[attributes.queryParams.userId != null]">
+				<ee:transform doc:name="Set filterClause" doc:id="c5869813-a6d3-4f9f-b7b9-03219520a256">
+			<ee:message>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="filterClause"><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"query" : "WHERE " ++ (if(attributes.queryParams.asOwner) "\"TaskOwner\"" else "\"TaskAssigner\"" ) ++ " = '" ++ attributes.queryParams.userId ++ "'" ++ 
+				
+				//----------------------------------------------------------------------
+				// ADD MULTIPLE FILTERS HERE
+				//----------------------------------------------------------------------
+				(if(attributes.queryParams.projectId?) " AND \"ProjectId\" = '" ++ attributes.queryParams.projectId default "" ++ "'" else "")
+}]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+				<ee:transform doc:name="Add Group By" doc:id="9028b8a1-456b-4bd6-9523-eb815e5e9ca4">
+			<ee:message>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="filterClause"><![CDATA[%dw 2.0
+output application/json
+---
+vars.filterClause.query ++ " GROUP BY \"TaskStatus\""]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+				<flow-ref doc:name="getFilterBasedDetailedTaskSummary" doc:id="42f25a5a-e32f-44b8-8835-4529186504b1" name="getFilterBasedDetailedTaskSummary"/>
+
+			</when>
+			<otherwise >
+				<flow-ref doc:name="getDetailedTaskSummary" doc:id="a16d9c69-de91-4037-8cca-e9ddd93bde64" name="getDetailedTaskSummary"/>
+			
+</otherwise>
+		</choice>
+		<ee:transform doc:name="Extract payload from all outputs" doc:id="640cd17f-bbde-47d0-b03c-e6a9a715d5f2">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+var activeStatus = ["IN_PROGRESS" , "NEW"]
+var closedStatus = ["COMPLETED" , "DELETED"]
+var reviewStatus = ["SELF_COMMIT" , "SELF_DELETE"]
+---
+{
+	 totalCount: sum(payload map ((item, index) -> item.count)) as String ,
+	
+     activeCount:  sum(payload map ((item, index) -> (if(activeStatus contains upper(item.TaskStatus)) 
+item.count else 0))) as String,
+	
+     closedCount:  sum(payload map ((item, index) -> (if(closedStatus contains upper(item.TaskStatus)) 
+item.count else 0))) as String,
+
+	 underReviewCount:  sum(payload map ((item, index) -> (if(reviewStatus contains upper(item.TaskStatus)) 
+item.count else 0))) as String,
+
+}
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	
+</flow>
+	<flow name="mainTaskSummaryDetailsFlow" doc:id="1edd6309-5523-4ca8-995c-bf272245146f" >
+		<choice doc:name="Choice" doc:id="aeefc8f8-1b69-4195-ad21-63a7ef3721a5" >
+			<when expression='#[attributes.queryParams.userId != null and attributes.queryParams.asOwner == "true"]'>
+				<ee:transform doc:name="Set filterClause" doc:id="0fe6a3fa-a172-42ee-b3bf-50b047f069ff">
+					<ee:message />
+					<ee:variables>
+						<ee:set-variable variableName="filterClause"><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"query" : "WHERE " ++ (if(attributes.queryParams.asOwner) "\"TaskOwner\"" else "\"TaskAssigner\"" ) ++ " = '" ++ attributes.queryParams.userId ++ "'" ++ 
+				
+				//----------------------------------------------------------------------
+				// ADD MULTIPLE FILTERS HERE
+				//----------------------------------------------------------------------
+				(if(attributes.queryParams.projectId?) " AND \"ProjectId\" = '" ++ attributes.queryParams.projectId default "" ++ "'" else "")
+}]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+				<ee:transform doc:name="Add Group By" doc:id="12b33285-7c61-494b-8a6f-b97d8d13d488">
+					<ee:message>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="filterClause"><![CDATA[%dw 2.0
+output application/json
+---
+vars.filterClause.query ++ " GROUP BY \"TaskStatus\""]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+				<flow-ref doc:name="getFilterBasedDetailedTaskSummary" doc:id="aaf96bbc-ed36-4a69-a8ee-f9276e973849" name="getFilterBasedDetailedTaskSummary"/>
+			
+</when>
+			<otherwise >
+				<flow-ref doc:name="getDetailedTaskSummary" doc:id="6a4e09c6-3593-44ec-973d-2c123ca85485" name="getDetailedTaskSummary"/>
+			</otherwise>
+		</choice>
+	</flow>
+	
+</mule>

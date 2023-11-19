@@ -69,8 +69,24 @@ output application/json
 ---
 payload map ( payload01 , indexOfPayload01 ) -> {
 	projectId: payload01.ProjectId as String default "",
-	projectName: payload01.ProjectName default ""
+	projectName: payload01.ProjectName default "",
+	dateCreated: payload01.DateCreated default ""
 }]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="getProjectsNotMappeWithUser" doc:id="dedca482-d2e8-40bc-8d21-77cfa0ae5953">
+		<db:select doc:name="Select" doc:id="b1005a00-acc5-44d7-afe8-c96dac10fe4d" config-ref="rdbms_master_db_config">
+			<reconnect />
+			<db:sql><![CDATA[SELECT DISTINCT "ProjectId" , "ProjectName" FROM project_master pm  WHERE "ProjectId" not in (select distinct CAST("ProjectId" as INTEGER)  from VIEW_USERPROJECTMAP where "UserId" = :userId)]]></db:sql>
+			<db:input-parameters><![CDATA[#[{'userId' : attributes.queryParams.userId}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="89348428-1782-4af1-88c5-b67e6f4cc454">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
 	</flow>
@@ -78,7 +94,14 @@ payload map ( payload01 , indexOfPayload01 ) -> {
 		<logger level="INFO" doc:name="Logger" doc:id="95f920f8-0965-4428-a23e-1f9cdf0da70e" />
 		<choice doc:name="Choice" doc:id="d8c2f880-8f22-4627-b4be-7f11eba872cc" >
 			<when expression="#[sizeOf(attributes.queryParams) == 2]">
-				<flow-ref doc:name="Get common project list for users" doc:id="f5f2e5a6-7daf-4cc8-845c-410d1a687cf1" name="getCommonProjectsListForUsers"/>
+				<choice doc:name="Choice" doc:id="60dee483-5fe3-4051-b29f-b5f3e1642e42" >
+					<when expression="attributes.queryParams.notmapped != null">
+						<flow-ref doc:name="getProjectsNotMappeWithUser" doc:id="f01b3ee3-fcc9-4756-adea-fd00dd29f380" name="getProjectsNotMappeWithUser" />
+					</when>
+					<otherwise>
+						<flow-ref doc:name="Get common project list for users" doc:id="f5f2e5a6-7daf-4cc8-845c-410d1a687cf1" name="getCommonProjectsListForUsers" />
+					</otherwise>
+				</choice>
 			</when>
 			<when expression="#[sizeOf(attributes.queryParams) == 1]" >
 				<choice doc:name="Choice" doc:id="87647dca-25bd-4158-a56f-39588ed3b6c9" >
@@ -124,6 +147,7 @@ vars.backup_payload]]></ee:set-payload>
 				</ee:message>
 			</ee:transform>
 			<flow-ref doc:name="createNewUserProjectMap" doc:id="b6157fce-dfb7-488a-bf68-9ce6886fb149" name="createNewUserProjectMap"/>
+			<flow-ref doc:name="addAdminMapping" doc:id="b3b7f3dd-abd3-4b14-8e47-2192ad5d049d" name="addAdminMapping"/>
 		</try>
 		<ee:transform doc:name="Transform Message" doc:id="256d645f-c4a4-48c7-a0f7-2f52f383291a" >
 			<ee:message >
