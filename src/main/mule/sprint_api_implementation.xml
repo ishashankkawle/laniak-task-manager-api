@@ -72,7 +72,7 @@ payload]]></ee:set-payload>
 			<db:sql><![CDATA[INSERT INTO sprint_master ("SprintId", "Sprint", "StartDate" , "EndDate") VALUES (:sprintid , :sprint, :startdate , :enddate)]]></db:sql>
 			<db:input-parameters><![CDATA[#[{
 	"sprintid" : vars.backup_payload.sprintId,
-	"sprint" : vars.backup_payload.sprintName,
+	"sprint" : vars.backup_payload.sprint,
 	"startdate" : vars.backup_payload.startDate,
 	"enddate" : vars.backup_payload.endDate
 }]]]></db:input-parameters>
