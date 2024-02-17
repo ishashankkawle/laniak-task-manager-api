@@ -1,4 +1,4 @@
-# Mule-Task-Manager-API
+# Laniak Task Manager API
 
 ## Pimary Config in Anypoint Platform
 - **Platform** : Cloudhub
